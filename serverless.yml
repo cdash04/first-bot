@@ -1,0 +1,54 @@
+service: APP-NAME
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: ca-central-1
+  stage: ${env:NODE_ENV}
+  tracing:
+    apiGateway: true
+    lambda: true
+  environment:
+    NODE_ENV: ${env:NODE_ENV}
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - secretsmanager:GetSecretValue
+        - s3:PutObject
+        - s3:GetObject
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - '*'
+
+package:
+  exclude:
+    - node_modules/**
+    - src/**
+    - test/**
+
+custom:
+  serverless-layers:
+    - packageManager: yarn
+    - dependenciesPath: ./package.json
+
+functions:
+  exemple:
+    handler: dist/functions/exemple.handler
+    events:
+      - http:
+          path: /status
+          method: ANY
+          cors: true
+      - http:
+          path: /status/{proxy+}
+          method: ANY
+          cors: true
+
+plugins:
+  - serverless-offline
+  - serverless-layers
