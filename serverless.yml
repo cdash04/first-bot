@@ -1,4 +1,4 @@
-service: APP-NAME
+service: first-bot
 provider:
   name: aws
   runtime: nodejs14.x
@@ -9,6 +9,7 @@ provider:
     lambda: true
   environment:
     NODE_ENV: ${env:NODE_ENV}
+    AWS_SNS_QUEUE_URL: { Ref: SuperTopic }
   iamRoleStatements:
     - Effect: 'Allow'
       Action:
@@ -35,6 +36,24 @@ custom:
   serverless-layers:
     - packageManager: yarn
     - dependenciesPath: ./package.json
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true
+      heapInitial: 200m
+      heapMax: 1g
+      migrate: true
+      seed: true
+      convertEmptyValues: true
+
+resources:
+  Resources:
+    SuperTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: MyCustomTopic
 
 functions:
   exemple:
@@ -48,7 +67,30 @@ functions:
           path: /status/{proxy+}
           method: ANY
           cors: true
+  subscribe:
+    handler: dist/functions/subscribe.handler
+    events:
+      - http:
+          path: /subscriptions
+          method: ANY
+          cors: true
+      - http:
+          path: /subscriptions/{proxy+}
+          method: ANY
+          cors: true
+  listen:
+    handler: dist/functions/listen.handler
+    events:
+      - http:
+          path: /events
+          method: ANY
+          cors: true
+      - http:
+          path: /events/{proxy+}
+          method: ANY
+          cors: true
 
 plugins:
   - serverless-offline
   - serverless-layers
+  - serverless-dynamodb-local
