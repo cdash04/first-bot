@@ -18,3 +18,5 @@ dist/**/*
 
 # Local DynamoDB
 .dynamodb
+
+*.local
