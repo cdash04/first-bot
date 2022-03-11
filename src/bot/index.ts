@@ -1,8 +1,6 @@
 import { ClientCredentialsAuthProvider } from '@twurple/auth';
 import { ApiClient } from '@twurple/api';
-import { EventSubListener } from '@twurple/eventsub';
 import TMI, { ChatUserstate, Options } from 'tmi.js';
-import { NgrokAdapter } from '@twurple/eventsub-ngrok';
 
 import { messageHandler } from './handlers/message-handler';
 
@@ -27,13 +25,6 @@ const tmiOauth = process.env.TWITCH_TMI_OAUTH;
 // setup Twitch client
 const authProvider = new ClientCredentialsAuthProvider(clientId, clientSecret);
 const apiClient = new ApiClient({ authProvider });
-
-// setup twitch EventSub Middleware server
-const listener = new EventSubListener({
-  apiClient,
-  adapter: new NgrokAdapter(),
-  secret: process.env.TWITCH_EVENT_SUB_LISTENER_SECRET,
-});
 
 // TMI listener setup
 const TMI_OPTIONS: Options = {
@@ -69,15 +60,12 @@ function logMessage(
 apiClient.users.getUserByName('josnib').then(async (user) => {
   const channel = await apiClient.channels.getChannelInfo(user.id);
   console.log({ ...channel });
-  await listener.subscribeToChannelFollowEvents(channel.id, (event) => {
-    console.log({ event });
-  });
 });
 
 chatClient
   .on('connected', onConnectedHandler)
   .on('message', logMessage)
-  .on('message', messageHandler);
+  .on('message', messageHandler(chatClient));
 
 chatClient.connect();
 // listener.listen();

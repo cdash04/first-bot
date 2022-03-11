@@ -80,7 +80,7 @@
     "@aws-sdk/types" "3.53.0"
     tslib "^2.3.0"
 
-"@aws-sdk/client-dynamodb@^3.5.0":
+"@aws-sdk/client-dynamodb@^3.5.0", "@aws-sdk/client-dynamodb@^3.53.0":
   version "3.53.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/client-dynamodb/-/client-dynamodb-3.53.0.tgz#c7b2f2b9233c73a99c3352bd832d4c0c1a763367"
   integrity sha512-U4SW2uQnVDEm6TtdHHcY6e5zo7puwjtcOWS+lDyPb/uQTlYk0DoBEuBuGA9d7DCLdSb6/dR5QKJJnr9nDCFcaw==
@@ -2766,6 +2766,13 @@ axios@^0.21.1:
   dependencies:
     follow-redirects "^1.14.0"
 
+axios@^0.26.1:
+  version "0.26.1"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.26.1.tgz#1ede41c51fcf51bbbd6fd43669caaa4f0495aaa9"
+  integrity sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA==
+  dependencies:
+    follow-redirects "^1.14.8"
+
 babel-jest@^27.5.1:
   version "27.5.1"
   resolved "https://registry.npmjs.org/babel-jest/-/babel-jest-27.5.1.tgz"
@@ -4840,7 +4847,7 @@ folder-hash@^3.3.0:
     graceful-fs "~4.2.0"
     minimatch "~3.0.4"
 
-follow-redirects@^1.14.0:
+follow-redirects@^1.14.0, follow-redirects@^1.14.8:
   version "1.14.9"
   resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.14.9.tgz#dd4ea157de7bfaf9ea9b3fbd85aa16951f78d8d7"
   integrity sha512-MQDfihBQYMcyy5dhRDJUHcw7lb2Pv/TuE6xP1vyraLukNDHKbDxDNaOE3NbCAdKQApno+GPRyo1YAp89yCjK4w==

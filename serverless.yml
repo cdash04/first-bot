@@ -1,6 +1,7 @@
 service: first-bot
 provider:
   name: aws
+  lambdaHashingVersion: 20200924
   runtime: nodejs14.x
   region: ca-central-1
   stage: ${env:NODE_ENV}
@@ -9,6 +10,8 @@ provider:
     lambda: true
   environment:
     NODE_ENV: ${env:NODE_ENV}
+    TABLE_NAME:
+      Ref: Table
   iamRoleStatements:
     - Effect: 'Allow'
       Action:
@@ -37,40 +40,57 @@ custom:
     - dependenciesPath: ./package.json
   dynamodb:
     stages:
-      - dev
+      - local
     start:
-      port: 8000
+      port: 4080
+      region: ca-central-1
       inMemory: true
       heapInitial: 200m
       heapMax: 1g
-      migrate: true
-      seed: true
-      convertEmptyValues: true
-  serverless-offline-sns:
-    port: 4002
-    debug: true
+  ngrokTunnel:
+    envPath: './.env.local' # optional. Path to your .env file, relative to serverless.yml file
+    tunnels:
+      - port: 4000
+        envProp: 'API_GATEWAY'
 
 functions:
   first:
     handler: dist/functions/first.handler
     events:
-      - sns:
-          arn: { Ref: Message }
-          topicName: FirstTopic
-  listen:
-    handler: dist/functions/listen.handler
-    events:
       - http:
-          path: /events
+          path: /firsts
           method: ANY
           cors: true
       - http:
-          path: /events/{proxy+}
+          path: /firsts/{proxy+}
+          method: ANY
+          cors: true
+  twitch-event:
+    handler: dist/functions/twitch-event.handler
+    events:
+      - http:
+          path: /twitch/event/
           method: ANY
           cors: true
 
+resources:
+  Resources:
+    Table:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Table${env:NODE_ENV}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
 plugins:
-  - serverless-offline
   - serverless-layers
   - serverless-dynamodb-local
-  - serverless-offline-sns
+  - serverless-offline
+  - serverless-ngrok-tunnel
