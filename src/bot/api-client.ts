@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 
 const baseApiConfig: AxiosRequestConfig = {
-  // responseType: 'json',
+  responseType: 'json',
   headers: {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache',

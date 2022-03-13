@@ -4,7 +4,6 @@ import { Entity } from 'dynamodb-onetable';
 const Broadcaster = {
   pk: { type: String, value: 'broadcaster:${name}' },
   sk: { type: String, value: 'broadcaster:' },
-  id: { type: String, required: true },
   name: { type: String, required: true },
   online: { type: Boolean, value: false },
   firstIsRedeemed: { type: Boolean, value: false },
@@ -12,11 +11,10 @@ const Broadcaster = {
 };
 
 const Viewer = {
-  pk: { type: String, value: 'broadcaster:${broadcasterName}' },
-  sk: { type: String, value: 'viewer:${name}' },
-  id: { type: String, required: true },
-  broadcasterName: { type: String, required: true },
+  pk: { type: String, value: 'viewer:${name}' },
+  sk: { type: String, value: 'broadcaster:${broadcasterName}' },
   name: { type: String, required: true },
+  broadcasterName: { type: String, required: true },
   firstStreak: { type: Number, value: '0' },
 };
 
@@ -25,8 +23,7 @@ export const Schema = {
   version: '0.0.1',
   indexes: {
     primary: { hash: 'pk', sort: 'sk' },
-    gs1: { hash: 'gs1pk', sort: 'gs1sk', follow: true },
-    ls1: { sort: 'id', type: 'local' },
+    ls1: { sort: 'name', type: 'local' },
   },
   models: {
     Broadcaster,

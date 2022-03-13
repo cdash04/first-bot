@@ -10,8 +10,7 @@ provider:
     lambda: true
   environment:
     NODE_ENV: ${env:NODE_ENV}
-    TABLE_NAME:
-      Ref: Table
+    TABLE_NAME: ${self:custom.tableName}
   iamRoleStatements:
     - Effect: 'Allow'
       Action:
@@ -25,8 +24,12 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
+        - dynamodb:ListTables
+        - cloudformation:DescribeStacks
+        - lambda:PublishLayerVersion
       Resource:
         - '*'
+        - 'arn:aws:s3:::layerBucket'
 
 package:
   exclude:
@@ -35,27 +38,20 @@ package:
     - test/**
 
 custom:
-  serverless-layers:
-    - packageManager: yarn
-    - dependenciesPath: ./package.json
-  dynamodb:
-    stages:
-      - local
-    start:
-      port: 4080
-      region: ca-central-1
-      inMemory: true
-      heapInitial: 200m
-      heapMax: 1g
-  ngrokTunnel:
-    envPath: './.env.local' # optional. Path to your .env file, relative to serverless.yml file
-    tunnels:
-      - port: 4000
-        envProp: 'API_GATEWAY'
+  stage: ${opt:stage, self:provider.stage}
+  tableName: ${self:custom.stage}-Table
+
+layers:
+  nodeModules:
+    path: layer
+    compatibleRuntimes:
+      - nodejs14.x
 
 functions:
   first:
     handler: dist/functions/first.handler
+    layers:
+      - { Ref: NodeModulesLambdaLayer }
     events:
       - http:
           path: /firsts
@@ -72,25 +68,26 @@ functions:
           path: /twitch/event/
           method: ANY
           cors: true
+      - http:
+          path: /twitch/event/{proxy+}
+          method: ANY
+          cors: true
 
 resources:
   Resources:
     Table:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: Table${env:NODE_ENV}
+        TableName: ${self:custom.tableName}
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
             AttributeType: S
         KeySchema:
-          - AttributeName: id
+          - AttributeName: pk
             KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-
-plugins:
-  - serverless-layers
-  - serverless-dynamodb-local
-  - serverless-offline
-  - serverless-ngrok-tunnel
+          - AttributeName: sk
+            KeyType: RANGE
+        # Set the capacity to auto-scale
+        BillingMode: PAY_PER_REQUEST

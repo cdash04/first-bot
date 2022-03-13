@@ -19,4 +19,14 @@ dist/**/*
 # Local DynamoDB
 .dynamodb
 
-*.local
+# local .env
+.env.local
+
+#layers
+layer
+
+#serverless
+.serverless
+
+#yarn
+yarn-error.log
