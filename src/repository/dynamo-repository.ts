@@ -10,22 +10,10 @@ const table = new Table({
   client,
   name: process.env.TABLE_NAME,
   schema: Schema,
+  logger: true,
 });
 
-console.log(process.env.TABLE_NAME);
+export const viewerReposiroty = table.getModel<ViewerType>('Viewer');
 
-table.createTable();
-
-export const getViewerReposiroty = async () => {
-  if (!(await table.exists())) {
-    table.createTable();
-  }
-  return table.getModel<ViewerType>('Viewer');
-};
-
-export const getBroadcasterRepository = async () => {
-  if (!(await table.exists())) {
-    table.createTable();
-  }
-  return table.getModel<BroadcasterType>('Broadcaster');
-};
+export const broadcasterRepository =
+  table.getModel<BroadcasterType>('Broadcaster');

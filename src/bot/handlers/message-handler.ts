@@ -6,20 +6,31 @@ enum Command {
   First = 'first',
 }
 
+interface MessageResponse {
+  message: string;
+}
+
 export const messageHandler =
   (chatClient: Client) =>
   (target: string, tags: ChatUserstate, message: string, self: boolean) => {
     const broadcaster = target.replace('#', '');
     const { username } = tags;
 
+    const sayMessage = async ({
+      data: { message },
+    }: {
+      data: MessageResponse;
+    }) => {
+      console.log({ message });
+      await chatClient.say(target, message);
+    };
+
     if (messageHasCommand(message, Command.First)) {
-      apiClient
-        .post('/firsts', {
+      return apiClient
+        .post<MessageResponse>('/firsts', {
           broadcaster,
           viewer: username,
         })
-        .then(({ data }) => {
-          console.log({ data });
-        });
+        .then(sayMessage);
     }
   };

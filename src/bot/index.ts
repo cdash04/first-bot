@@ -68,4 +68,3 @@ chatClient
   .on('message', messageHandler(chatClient));
 
 chatClient.connect();
-// listener.listen();

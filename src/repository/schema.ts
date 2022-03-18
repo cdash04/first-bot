@@ -6,16 +6,17 @@ const Broadcaster = {
   sk: { type: String, value: 'broadcaster:' },
   name: { type: String, required: true },
   online: { type: Boolean, value: false },
-  firstIsRedeemed: { type: Boolean, value: false },
+  firstIsRedeemed: { type: Boolean, value: true },
   currentFirstViewer: { type: String },
+  currentFirstStreak: { type: Number },
 };
 
 const Viewer = {
   pk: { type: String, value: 'viewer:${name}' },
-  sk: { type: String, value: 'broadcaster:${broadcasterName}' },
+  sk: { type: String, value: 'viewer:${broadcasterName}' },
   name: { type: String, required: true },
   broadcasterName: { type: String, required: true },
-  firstStreak: { type: Number, value: '0' },
+  firstCount: { type: Number, value: '1' },
 };
 
 export const Schema = {
