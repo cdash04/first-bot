@@ -10,10 +10,22 @@ jobs:
   deploy:
     name: Deploy to EC2 on master branch push
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout the files
         uses: actions/checkout@v2
+
+      - name: Set env to prod
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+        run: |
+          echo "::set-env name=NODE_ENV::prod"
+          echo "::set-env name=TWITCH_CLIENT_ID::${{ secrets.TWITCH_CLIENT_ID }}"
+          echo "::set-env name=TWITCH_CLIENT_SECRET::${{ secrets.TWITCH_CLIENT_SECRET }}"
+          echo "::set-env name=BOT_NAME::${{ secrets.BOT_NAME }}"
+          echo "::set-env name=TWITCH_TMI_OAUTH::${{ secrets.TWITCH_TMI_OAUTH }}"
+          echo "::set-env name=APP_API_URL::${{ secrets.APP_API_URL }}"
+
+      - run: yarn run build
 
       - name: Deploy to Server 1
         uses: easingthemes/ssh-deploy@main
@@ -21,4 +33,6 @@ jobs:
           SSH_PRIVATE_KEY: ${{secrets.EC2_SSH_KEY}}
           REMOTE_HOST: ${{secrets.HOST_DNS}}
           REMOTE_USER: ${{secrets.USERNAME}}
+          SOURCE: ./dist/
+          EXCLUDE: "/dist/, /node_modules/, /src/"
           TARGET: ./
