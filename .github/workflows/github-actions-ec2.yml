@@ -25,7 +25,8 @@ jobs:
           echo "::set-env name=TWITCH_TMI_OAUTH::${{ secrets.TWITCH_TMI_OAUTH }}"
           echo "::set-env name=APP_API_URL::${{ secrets.APP_API_URL }}"
 
-      - run: yarn run build
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
 
       - name: Deploy to Server 1
         uses: easingthemes/ssh-deploy@main
