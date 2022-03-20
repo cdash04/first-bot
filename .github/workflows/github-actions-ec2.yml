@@ -35,5 +35,5 @@ jobs:
           REMOTE_HOST: ${{secrets.HOST_DNS}}
           REMOTE_USER: ${{secrets.USERNAME}}
           SOURCE: ./dist/
-          EXCLUDE: "/dist/, /node_modules/, /src/"
+          EXCLUDE: /src/
           TARGET: ./
