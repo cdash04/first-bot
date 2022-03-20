@@ -5,6 +5,7 @@
     "main": "server.js",
     "scripts": {
         "start": "yarn run serve",
+        "start:bot": "yarn pm2 bot/index.js --env production",
         "build": "yarn run build-ts",
         "serve": "node dist/server.js",
         "dev": "NODE_ENV=local sls offline start --httpPort 4000",

@@ -3,6 +3,8 @@ name: Push-bot-to-EC2
 # Trigger deployment only on push to master branch
 on:
   push:
+    paths:
+      - 'src/bot/**'
     branches:
       - main
 
