@@ -17,7 +17,7 @@ export const messageHandler =
     tags: ChatUserstate,
     message: string,
     self: boolean,
-  ) => {
+  ): Promise<void> => {
     const broadcaster = target.replace('#', '');
     const { username } = tags;
 
@@ -35,6 +35,6 @@ export const messageHandler =
         broadcaster,
         viewer: username,
       });
-      return sayMessage(result);
+      sayMessage(result);
     }
   };
