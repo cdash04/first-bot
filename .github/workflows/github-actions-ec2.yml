@@ -25,7 +25,7 @@ jobs:
           echo "::set-env name=TWITCH_TMI_OAUTH::${{ secrets.TWITCH_TMI_OAUTH }}"
           echo "::set-env name=APP_API_URL::${{ secrets.APP_API_URL }}"
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install
       - run: yarn build
 
       - name: Deploy to Server 1
@@ -35,5 +35,5 @@ jobs:
           REMOTE_HOST: ${{secrets.HOST_DNS}}
           REMOTE_USER: ${{secrets.USERNAME}}
           SOURCE: ./dist/
-          EXCLUDE: /src/
+          EXCLUDE: "/dist/, /node_modules/ "
           TARGET: ./

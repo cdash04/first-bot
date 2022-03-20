@@ -12,7 +12,12 @@ interface MessageResponse {
 
 export const messageHandler =
   (chatClient: Client) =>
-  (target: string, tags: ChatUserstate, message: string, self: boolean) => {
+  async (
+    target: string,
+    tags: ChatUserstate,
+    message: string,
+    self: boolean,
+  ) => {
     const broadcaster = target.replace('#', '');
     const { username } = tags;
 
@@ -26,11 +31,10 @@ export const messageHandler =
     };
 
     if (messageHasCommand(message, Command.First)) {
-      return apiClient
-        .post<MessageResponse>('/firsts', {
-          broadcaster,
-          viewer: username,
-        })
-        .then(sayMessage);
+      const result = await apiClient.post<MessageResponse>('/firsts', {
+        broadcaster,
+        viewer: username,
+      });
+      return sayMessage(result);
     }
   };
