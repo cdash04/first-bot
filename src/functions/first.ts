@@ -21,49 +21,63 @@ api.post('/firsts', async (req: Request, res: Response) => {
     });
   }
 
-  // get broadcaster and viewer
-  const broadcaster = await broadcasterRepository.get({
+  // get broadcaster
+  let broadcaster = await broadcasterRepository.get({
     name: broadcasterName,
   });
-  const viewer = await viewerReposiroty.get({
+
+  // if streamer is offline
+  if (!broadcaster.online) {
+    return res.status(201).json({
+      message: `@${broadcaster.name} is offline, you cannot first someone who's offline`,
+    });
+  }
+
+  // get viewer
+  let viewer = await viewerReposiroty.get({
     name: viewerName,
     broadcasterName,
   });
 
-  // when broadcaster is new, viewer is first
+  // when broadcaster is new, viewer is first and must be new
   if (!broadcaster) {
-    await broadcasterRepository.create({
-      name: broadcasterName,
-      currentFirstViewer: viewerName,
-      currentFirstStreak: 1,
-    });
-    await viewerReposiroty.create({
-      name: viewerName,
-      broadcasterName,
-    });
+    [broadcaster, viewer] = await Promise.all([
+      // create new broadcaster
+      await broadcasterRepository.create({
+        name: broadcasterName,
+        currentFirstViewer: viewerName,
+        currentFirstStreak: 1,
+      }),
+      // create new viewer
+      await viewerReposiroty.create({
+        name: viewerName,
+        broadcasterName,
+      }),
+    ]);
     return res.status(200).json({
       message: `Congratz @${viewerName}, you are the first ever to this channel. Starting a whole new adventure.`,
     });
   }
 
-  // when viewer is new
+  // when viewer is new but not broadcaster
   if (!viewer) {
-    // create new viewer
-    await viewerReposiroty.create({
-      name: viewerName,
-      broadcasterName,
-    });
-
-    // update current streak viewer and current streak count
-    await broadcasterRepository.update(
-      {
-        name: broadcasterName,
-      },
-      { set: { currentFirstViewer: viewerName, currentFirstStreak: 1 } },
-    );
+    [broadcaster, viewer] = await Promise.all([
+      // create new viewer
+      await viewerReposiroty.create({
+        name: viewerName,
+        broadcasterName,
+      }),
+      // update current streak viewer and current streak count
+      await broadcasterRepository.update(
+        {
+          name: broadcasterName,
+        },
+        { set: { currentFirstViewer: viewerName, currentFirstStreak: 1 } },
+      ),
+    ]);
 
     return res.status(200).json({
-      message: `Congratz @${viewerName}, it is your first first. Starting a new streak.`,
+      message: `Congratz @${viewer.name}, it is your first first. Starting a new streak.`,
     });
   }
 
@@ -89,50 +103,57 @@ api.post('/firsts', async (req: Request, res: Response) => {
 
   // when !first has been redeemed by a new person
   if (broadcaster.currentFirstViewer !== viewer.name) {
-    // init streak
-    await broadcasterRepository.update(
-      { name: broadcaster.name },
-      { set: { currentFirstViewer: viewerName, currentFirstStreak: 1 } },
-    );
+    [broadcaster, viewer] = await Promise.all([
+      // init streak
+      broadcasterRepository.update(
+        { name: broadcaster.name },
+        {
+          set: {
+            currentFirstViewer: viewerName,
+            currentFirstStreak: 1,
+            firstIsRedeemed: true,
+          },
+        },
+      ),
+      // add 1 to viewer count
+      viewerReposiroty.update(
+        {
+          name: viewer.name,
+          broadcasterName: viewer.broadcasterName,
+        },
+        { add: { firstCount: 1 } },
+      ),
+    ]);
 
-    // add 1 to viewer count
-    await viewerReposiroty.update(
-      {
-        name: viewer.name,
-        broadcasterName: viewer.broadcasterName,
-      },
-      { add: { firstCount: 1 } },
-    );
     return res.status(200).json({
-      message: `Congratz @${
-        viewer.name
-      }, you are the first, You've been first ${
-        viewer.firstCount + 1
-      } time(s) in total. Starting a new streak.`,
+      message: `Congratz @${viewer.name}, you are the first, You've been first ${viewer.firstCount} time(s) in total. Starting a new streak.`,
     });
   }
 
   // when !first has been redeemed by the same person
   if (broadcaster.currentFirstViewer === viewer.name) {
+    [broadcaster, viewer] = await Promise.all([
+      // add 1 to the streak, since it continue and set firstIsRedeemed to true
+      broadcasterRepository.update(
+        { name: broadcaster.name },
+        { add: { currentFirstStreak: 1 }, set: { firstIsRedeemed: true } },
+      ),
+      // add 1 to viewer count
+      viewerReposiroty.update(
+        {
+          name: viewer.name,
+          broadcasterName: viewer.broadcasterName,
+        },
+        { add: { firstCount: 1 } },
+      ),
+    ]);
 
-    // add 1 to the streak, since it continue
-    await broadcasterRepository.update(
-      { name: broadcaster.name },
-      { add: { currentFirstStreak: 1 } },
-    );
-
-    // add 1 to viewer count
-    await viewerReposiroty.update(
-      {
-        name: viewer.name,
-        broadcasterName: viewer.broadcasterName,
-      },
-      { add: { firstCount: 1 } },
-    );
+    return res.status(200).json({
+      message: `Congratz @${viewer.name}, you are the first, You've been first ${viewer.firstCount} time(s) in total. Curently on a streak of ${broadcaster.currentFirstStreak} first(s).`,
+    });
   }
 
-  console.log({ broadcaster, viewer });
-  return res.status(200).json({ broadcaster, viewer });
+  return res.status(400).json({ message: 'first message was unhandled' });
 });
 
 api.get('/firsts/:broadcaster/:viewer', async (req: Request, res: Response) => {
