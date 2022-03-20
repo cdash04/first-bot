@@ -22,6 +22,8 @@ const clientSecret = process.env.TWITCH_CLIENT_SECRET;
 const botName = process.env.BOT_NAME;
 const tmiOauth = process.env.TWITCH_TMI_OAUTH;
 
+console.log({ clientId });
+
 // setup Twitch client
 const authProvider = new ClientCredentialsAuthProvider(clientId, clientSecret);
 const apiClient = new ApiClient({ authProvider });
