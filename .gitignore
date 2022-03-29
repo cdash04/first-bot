@@ -21,6 +21,7 @@ dist/**/*
 
 # local .env
 .env.local
+.env.development
 
 #layers
 layer

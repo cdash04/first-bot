@@ -1,8 +1,12 @@
 import { ClientCredentialsAuthProvider } from '@twurple/auth';
 import { ApiClient } from '@twurple/api';
 import TMI, { ChatUserstate, Options } from 'tmi.js';
+// import { program } from 'commander';
 
 import { messageHandler } from './handlers/message-handler';
+
+// program.option('-c, --channel <string>', 'channel chat the bot will listen to');
+// program.parse();
 
 // channels
 const channels = [

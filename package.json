@@ -5,7 +5,7 @@
     "main": "server.js",
     "scripts": {
         "start": "yarn run serve",
-        "start:bot": "yarn pm2 bot/index.js --env production",
+        "start:bot": "pm2 start bot --env development",
         "build": "yarn run build-ts",
         "serve": "node dist/server.js",
         "dev": "NODE_ENV=local sls offline start --httpPort 4000",
@@ -33,6 +33,7 @@
         "aws-lambda": "^1.0.7",
         "aws-sdk": "^2.1087.0",
         "axios": "^0.26.1",
+        "commander": "^9.1.0",
         "dynamodb-onetable": "2.3.2",
         "env-cmd": "^10.1.0",
         "express": "^4.17.3",
