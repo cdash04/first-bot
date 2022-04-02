@@ -1,24 +1,26 @@
 import { ClientCredentialsAuthProvider } from '@twurple/auth';
 import { ApiClient } from '@twurple/api';
 import TMI, { ChatUserstate, Options } from 'tmi.js';
-// import { program } from 'commander';
+import { program } from 'commander';
 
 import { messageHandler } from './handlers/message-handler';
 
-// program.option('-c, --channel <string>', 'channel chat the bot will listen to');
-// program.parse();
+program.option('-c, --channel <string>', 'channel chat the bot will listen to');
+program.parse();
+
+const { channel } = program.opts<{ channel: string }>();
 
 // channels
-const channels = [
-  'todjrekt',
-  'jbezzo',
-  'josnib',
-  'knifebyt',
-  'cdash01',
-  'fussybalel',
-  'robzen42',
-  'patkilo',
-];
+// const channels = [
+//   'todjrekt',
+//   'jbezzo',
+//   'josnib',
+//   'knifebyt',
+//   'cdash01',
+//   'fussybalel',
+//   'robzen42',
+//   'patkilo',
+// ];
 
 // creds, to delete and put into secrets later
 const clientId = process.env.TWITCH_CLIENT_ID;
@@ -38,7 +40,7 @@ const TMI_OPTIONS: Options = {
     username: botName,
     password: tmiOauth,
   },
-  channels,
+  channels: [channel],
 };
 
 const chatClient = new TMI.Client(TMI_OPTIONS);

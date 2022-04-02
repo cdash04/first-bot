@@ -62,15 +62,26 @@ functions:
           path: /firsts/{proxy+}
           method: ANY
           cors: true
-  twitch-event:
-    handler: dist/functions/twitch-event.handler
+  online-event:
+    handler: dist/functions/online-event.handler
     events:
       - http:
-          path: /twitch/event/
+          path: /events/online/
           method: ANY
           cors: true
       - http:
-          path: /twitch/event/{proxy+}
+          path: /events/online/{proxy+}
+          method: ANY
+          cors: true
+  offline-event:
+    handler: dist/functions/offline-event.handler
+    events:
+      - http:
+          path: /events/offline/
+          method: ANY
+          cors: true
+      - http:
+          path: /events/offline/{proxy+}
           method: ANY
           cors: true
 
@@ -92,3 +103,5 @@ resources:
             KeyType: RANGE
         # Set the capacity to auto-scale
         BillingMode: PAY_PER_REQUEST
+plugins:
+  - serverless-offline

@@ -6,7 +6,7 @@ import { corsMiddleware } from '../middlewares/cors';
 
 const api = createAPI({});
 
-api.post('/online-events/', async (req: Request, res: Response) => {
+api.post('/events/online', async (req: Request, res: Response) => {
   console.log({ req, res });
   res.status(200);
 });
