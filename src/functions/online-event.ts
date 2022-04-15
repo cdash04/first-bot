@@ -8,7 +8,7 @@ const api = createAPI({});
 
 api.post('/events/online', async (req: Request, res: Response) => {
   console.log({ req, res });
-  res.status(200);
+  await res.status(200);
 });
 
 api.use(corsMiddleware);

@@ -5,10 +5,14 @@ import { program } from 'commander';
 
 import { messageHandler } from './handlers/message-handler';
 
-program.option('-c, --channel <string>', 'channel chat the bot will listen to');
+program.option(
+  '-c, --channels <string>',
+  'channel chat the bot will listen to',
+);
 program.parse();
 
-const { channel } = program.opts<{ channel: string }>();
+const { channels: channelsArgument } = program.opts<{ channels: string }>();
+const channels = channelsArgument.split(',').map((channel) => channel.trim());
 
 // channels
 // const channels = [
@@ -40,7 +44,7 @@ const TMI_OPTIONS: Options = {
     username: botName,
     password: tmiOauth,
   },
-  channels: [channel],
+  channels,
 };
 
 const chatClient = new TMI.Client(TMI_OPTIONS);
