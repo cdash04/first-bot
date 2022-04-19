@@ -7,7 +7,7 @@ import { messageHandler } from './handlers/message-handler';
 
 program.option(
   '-c, --channels <string>',
-  'channel chat the bot will listen to',
+  'channels chat the bot will listen to',
 );
 program.parse();
 

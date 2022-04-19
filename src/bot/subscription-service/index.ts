@@ -1,3 +1,3 @@
-import { getOnlineSubscriptionService } from './online-subscription-service';
+import { createOnlineSubscriptionService } from './online-subscription-service';
 
-export default { getOnlineSubscriptionService };
+export default { createOnlineSubscriptionService };

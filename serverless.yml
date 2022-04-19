@@ -1,7 +1,6 @@
 service: first-bot
 provider:
   name: aws
-  lambdaHashingVersion: 20200924
   runtime: nodejs14.x
   region: ca-central-1
   stage: ${env:NODE_ENV}
@@ -10,6 +9,7 @@ provider:
     lambda: true
   environment:
     NODE_ENV: ${env:NODE_ENV}
+    TWITCH_EVENT_SUB_LISTENER_SECRET: ${env:TWITCH_EVENT_SUB_LISTENER_SECRET}
     TABLE_NAME: ${self:custom.tableName}
   iamRoleStatements:
     - Effect: 'Allow'
@@ -29,14 +29,17 @@ provider:
         - lambda:PublishLayerVersion
         - cloudformation:DescribeStacks
       Resource:
-        - '*'
         - 'arn:aws:s3:::layerBucket'
+        - '*'
 
 package:
+  include:
+    - dist/**
   exclude:
+    - layer/**
     - node_modules/**
     - src/**
-    - test/**
+    - dist/bot/**
 
 custom:
   stage: ${opt:stage, self:provider.stage}
@@ -64,6 +67,8 @@ functions:
           cors: true
   online-event:
     handler: dist/functions/online-event.handler
+    layers:
+      - { Ref: NodeModulesLambdaLayer }
     events:
       - http:
           path: /events/online/
@@ -75,6 +80,8 @@ functions:
           cors: true
   offline-event:
     handler: dist/functions/offline-event.handler
+    layers:
+      - { Ref: NodeModulesLambdaLayer }
     events:
       - http:
           path: /events/offline/

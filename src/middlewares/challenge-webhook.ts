@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 import { Request, Response, NextFunction } from 'lambda-api';
 
 const MESSAGE_TYPE = 'Twitch-Eventsub-Message-Type'.toLowerCase();
@@ -10,7 +11,7 @@ export const challengeWebhookMiddleware = (
 ) => {
   if (MESSAGE_TYPE_VERIFICATION === req.headers[MESSAGE_TYPE]) {
     const { challenge } = req.body;
-    res.status(200).send(challenge);
+    return res.status(200).send(challenge);
   }
   next();
 };

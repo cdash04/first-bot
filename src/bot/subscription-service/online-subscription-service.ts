@@ -1,6 +1,6 @@
 import { ApiClient } from '@twurple/api/lib';
 
-export const getOnlineSubscriptionService = (twitchApi: ApiClient) => {
+export const createOnlineSubscriptionService = (twitchApi: ApiClient) => {
   const getChannelId = async (channelName: string) =>
     (await twitchApi.users.getUserByName(channelName)).id;
 
@@ -11,9 +11,9 @@ export const getOnlineSubscriptionService = (twitchApi: ApiClient) => {
   const channelHasOnlineEventSubsciption = async (channelId: string) => {
     return (await getOnlineEvents()).data.some(
       (onlineEvent) =>
-        (onlineEvent.condition?.broadcaster_user_id === channelId &&
-          onlineEvent.condition?.callback === (process.env.ONLINE_EVENT_URL ??
-            'api.bot.cda.sh/events/online')),
+        onlineEvent.condition?.broadcaster_user_id === channelId &&
+        onlineEvent.condition?.callback ===
+          `${process.env.ONLINE_EVENT_URL}/events/online`,
     );
   };
 
@@ -26,8 +26,8 @@ export const getOnlineSubscriptionService = (twitchApi: ApiClient) => {
 
     twitchApi.eventSub.subscribeToStreamOnlineEvents(channelId, {
       method: 'webhook',
-      callback: process.env.ONLINE_EVENT_URL ?? 'api.bot.cda.sh/events/online',
-      secret: process.env.EVENT_SUB_SECRET,
+      callback: `${process.env.ONLINE_EVENT_URL}/events/online`,
+      secret: process.env.TWITCH_EVENT_SUB_LISTENER_SECRET,
     });
   };
 
@@ -35,5 +35,5 @@ export const getOnlineSubscriptionService = (twitchApi: ApiClient) => {
 };
 
 export type OnlineSubscriptionService = ReturnType<
-  typeof getOnlineSubscriptionService
+  typeof createOnlineSubscriptionService
 >;
