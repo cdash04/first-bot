@@ -4,6 +4,10 @@ import TMI, { ChatUserstate, Options } from 'tmi.js';
 import { program } from 'commander';
 
 import { messageHandler } from './handlers/message-handler';
+import {
+  createOfflineSubscriptionService,
+  createOnlineSubscriptionService,
+} from './subscription-service';
 
 program.option(
   '-c, --channels <string>',
@@ -38,6 +42,14 @@ console.log({ clientId, clientSecret });
 const authProvider = new ClientCredentialsAuthProvider(clientId, clientSecret);
 const apiClient = new ApiClient({ authProvider });
 
+const onlineSubscriptionService = createOnlineSubscriptionService(apiClient);
+const offlineSubscriptionService = createOfflineSubscriptionService(apiClient);
+
+channels.forEach(async (channel) => {
+  onlineSubscriptionService.subscribeToOnlineEvent(channel);
+  offlineSubscriptionService.subscribeToOfflineEvent(channel);
+});
+
 // TMI listener setup
 const TMI_OPTIONS: Options = {
   identity: {
@@ -68,11 +80,6 @@ function logMessage(
   // log every message
   console.log(`${target}, ${tags.username}: "${trimmedMessage}"`);
 }
-
-apiClient.users.getUserByName('josnib').then(async (user) => {
-  const channel = await apiClient.channels.getChannelInfo(user.id);
-  console.log({ ...channel });
-});
 
 chatClient
   .on('connected', onConnectedHandler)

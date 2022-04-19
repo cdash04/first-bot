@@ -1,3 +1,4 @@
 import { createOnlineSubscriptionService } from './online-subscription-service';
+import { createOfflineSubscriptionService } from './offline-subscription-service';
 
-export default { createOnlineSubscriptionService };
+export { createOnlineSubscriptionService, createOfflineSubscriptionService };

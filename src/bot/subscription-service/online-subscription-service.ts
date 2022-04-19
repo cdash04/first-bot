@@ -1,4 +1,5 @@
-import { ApiClient } from '@twurple/api/lib';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ApiClient } from '@twurple/api';
 
 export const createOnlineSubscriptionService = (twitchApi: ApiClient) => {
   const getChannelId = async (channelName: string) =>
@@ -8,30 +9,28 @@ export const createOnlineSubscriptionService = (twitchApi: ApiClient) => {
     return twitchApi.eventSub.getSubscriptionsForType('stream.online');
   };
 
-  const channelHasOnlineEventSubsciption = async (channelId: string) => {
-    return (await getOnlineEvents()).data.some(
-      (onlineEvent) =>
-        onlineEvent.condition?.broadcaster_user_id === channelId &&
-        onlineEvent.condition?.callback ===
-          `${process.env.ONLINE_EVENT_URL}/events/online`,
+  const channelHasOnlineEventSubsciption = async (channelId: string) =>
+    (await getOnlineEvents()).data.some(
+      (onlineEvent) => onlineEvent.condition?.broadcaster_user_id === channelId,
     );
-  };
 
   const subscribeToOnlineEvent = async (channelName: string) => {
     const channelId = await getChannelId(channelName);
 
-    if (channelHasOnlineEventSubsciption) {
+    if (channelHasOnlineEventSubsciption(channelId)) {
       return;
     }
 
     twitchApi.eventSub.subscribeToStreamOnlineEvents(channelId, {
       method: 'webhook',
-      callback: `${process.env.ONLINE_EVENT_URL}/events/online`,
+      callback: `${process.env.APP_API_URL}/events/online`,
       secret: process.env.TWITCH_EVENT_SUB_LISTENER_SECRET,
     });
   };
 
-  return { subscribeToOnlineEvent };
+  return {
+    subscribeToOnlineEvent,
+  };
 };
 
 export type OnlineSubscriptionService = ReturnType<
