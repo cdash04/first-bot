@@ -6,6 +6,7 @@ import { BroadcasterType, Schema, ViewerType } from './schema';
 
 const params: DynamoDBClientConfig = {};
 const client = new Dynamo({ client: new DynamoDBClient(params) });
+
 const table = new Table({
   client,
   name: process.env.TABLE_NAME,

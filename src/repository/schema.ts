@@ -5,8 +5,8 @@ const Broadcaster = {
   pk: { type: String, value: 'broadcaster:${name}' },
   sk: { type: String, value: 'broadcaster:' },
   name: { type: String, required: true },
-  online: { type: Boolean, value: false },
-  firstIsRedeemed: { type: Boolean, value: true },
+  online: { type: Boolean, value: 'false' },
+  firstIsRedeemed: { type: Boolean, value: 'true' },
   currentFirstViewer: { type: String },
   currentFirstStreak: { type: Number },
 };

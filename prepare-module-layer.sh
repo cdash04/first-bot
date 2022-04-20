@@ -1,3 +1,4 @@
+rm -rf ./layer
 mkdir -p ./layer/nodejs
 cp ./package.json ./layer/nodejs
 cd ./layer/nodejs

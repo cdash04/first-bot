@@ -69,9 +69,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
       }),
       // update current streak viewer and current streak count
       await broadcasterRepository.update(
-        {
-          name: broadcasterName,
-        },
+        { name: broadcasterName },
         { set: { currentFirstViewer: viewerName, currentFirstStreak: 1 } },
       ),
     ]);

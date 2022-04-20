@@ -2,16 +2,16 @@ import { APIGatewayEvent, Context } from 'aws-lambda';
 import createAPI, { Request, Response } from 'lambda-api';
 import { broadcasterRepository } from '../repository/dynamo-repository';
 import { challengeWebhookMiddleware } from '../middlewares/challenge-webhook';
-import { corsMiddleware } from '../middlewares/cors';
 import { eventSubSecret } from '../middlewares/event-sub-secret';
+import { corsMiddleware } from '../middlewares/cors';
 
-const api = createAPI({});
+const api = createAPI({ logger: true });
 
 api.use(corsMiddleware);
 api.use(challengeWebhookMiddleware);
 api.use(eventSubSecret);
 
-api.post('/events/offline', async (req: Request, res: Response) => {
+api.post('/events/online', async (req: Request, res: Response) => {
   const broadcasterName: string = req.body?.event?.broadcaster_user_name;
 
   if (!broadcasterName) {
@@ -22,21 +22,17 @@ api.post('/events/offline', async (req: Request, res: Response) => {
     name: broadcasterName,
   });
 
-  if (!broadcasterName) {
-    return res.status(400);
-  }
-
   if (!broadcaster) {
     await broadcasterRepository.create({
       name: broadcasterName,
-      online: false,
+      online: true,
       firstIsRedeemed: false,
       currentFirstStreak: 0,
     });
   } else {
     await broadcasterRepository.update(
       { name: broadcasterName },
-      { set: { online: false, firstIsRedeemed: false } },
+      { set: { online: true, firstIsRedeemed: false } },
     );
   }
 
