@@ -5,9 +5,10 @@ import { program } from 'commander';
 
 import { messageHandler } from './handlers/message-handler';
 import {
+  broadcasterService,
   createOfflineSubscriptionService,
   createOnlineSubscriptionService,
-} from './subscription-service';
+} from './services';
 
 program.option(
   '-c, --channels <string>',
@@ -17,18 +18,6 @@ program.parse();
 
 const { channels: channelsArgument } = program.opts<{ channels: string }>();
 const channels = channelsArgument.split(',').map((channel) => channel.trim());
-
-// channels
-// const channels = [
-//   'todjrekt',
-//   'jbezzo',
-//   'josnib',
-//   'knifebyt',
-//   'cdash01',
-//   'fussybalel',
-//   'robzen42',
-//   'patkilo',
-// ];
 
 // creds, to delete and put into secrets later
 const clientId = process.env.TWITCH_CLIENT_ID;
@@ -46,6 +35,7 @@ const onlineSubscriptionService = createOnlineSubscriptionService(apiClient);
 const offlineSubscriptionService = createOfflineSubscriptionService(apiClient);
 
 channels.forEach(async (channel) => {
+  await broadcasterService.initBroadcaster(channel);
   onlineSubscriptionService.subscribeToOnlineEvent(channel);
   offlineSubscriptionService.subscribeToOfflineEvent(channel);
 });

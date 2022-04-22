@@ -65,6 +65,19 @@ functions:
           path: /firsts/{proxy+}
           method: ANY
           cors: true
+  broadcasters:
+    handler: dist/functions/broadcasters.handler
+    layers:
+      - { Ref: NodeModulesLambdaLayer }
+    events:
+      - http:
+          path: /broadcasters
+          method: ANY
+          cors: true
+      - http:
+          path: /broadcasters/{proxy+}
+          method: ANY
+          cors: true
   online-event:
     handler: dist/functions/online-event.handler
     layers:
