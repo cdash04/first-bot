@@ -5,19 +5,20 @@ export const createOnlineSubscriptionService = (twitchApi: ApiClient) => {
   const getChannelId = async (channelName: string) =>
     (await twitchApi.users.getUserByName(channelName)).id;
 
-  const getOnlineEvents = async () => {
-    return twitchApi.eventSub.getSubscriptionsForType('stream.online');
-  };
+  const getOnlineEvents = async () =>
+    twitchApi.eventSub.getSubscriptionsForType('stream.online');
 
-  const channelHasOnlineEventSubsciption = async (channelId: string) =>
-    (await getOnlineEvents()).data.some(
+  const channelHasOnlineEventSubsciption = async (channelId: string) => {
+    const { data } = await getOnlineEvents();
+    return data.some(
       (onlineEvent) => onlineEvent.condition?.broadcaster_user_id === channelId,
     );
+  };
 
   const subscribeToOnlineEvent = async (channelName: string) => {
     const channelId = await getChannelId(channelName);
 
-    if (channelHasOnlineEventSubsciption(channelId)) {
+    if (await channelHasOnlineEventSubsciption(channelId)) {
       return;
     }
 

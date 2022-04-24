@@ -26,7 +26,6 @@ export const messageHandler =
     }: {
       data: MessageResponse;
     }) => {
-      console.log({ message });
       await chatClient.say(target, message);
     };
 

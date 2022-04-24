@@ -5,9 +5,8 @@ export const createOfflineSubscriptionService = (twitchApi: ApiClient) => {
   const getChannelId = async (channelName: string) =>
     (await twitchApi.users.getUserByName(channelName)).id;
 
-  const getOfflineEvents = async () => {
-    return twitchApi.eventSub.getSubscriptionsForType('stream.offline');
-  };
+  const getOfflineEvents = async () =>
+    twitchApi.eventSub.getSubscriptionsForType('stream.offline');
 
   const channelHasOfflineEventSubsciption = async (channelId: string) =>
     (await getOfflineEvents()).data.some(
@@ -18,7 +17,7 @@ export const createOfflineSubscriptionService = (twitchApi: ApiClient) => {
   const subscribeToOfflineEvent = async (channelName: string) => {
     const channelId = await getChannelId(channelName);
 
-    if (channelHasOfflineEventSubsciption(channelId)) {
+    if (await channelHasOfflineEventSubsciption(channelId)) {
       return;
     }
 
