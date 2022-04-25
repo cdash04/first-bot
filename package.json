@@ -34,7 +34,7 @@
         "commander": "^9.1.0",
         "crypto": "^1.0.1",
         "dotenv": "^16.0.0",
-        "dynamodb-onetable": "2.3.5",
+        "dynamodb-onetable": "2.3.6",
         "env-cmd": "^10.1.0",
         "express": "^4.17.3",
         "fs": "^0.0.1-security",

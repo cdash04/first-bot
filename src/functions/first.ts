@@ -10,6 +10,8 @@ import { corsMiddleware } from '../middlewares/cors';
 
 const api = createAPI({ logger: true });
 
+api.use(corsMiddleware);
+
 api.post('/firsts', async (req: Request, res: Response) => {
   console.log({ body: req.body });
   const { broadcaster: broadcasterName, viewer: viewerName } = req.body;
@@ -26,6 +28,8 @@ api.post('/firsts', async (req: Request, res: Response) => {
     name: broadcasterName,
   });
 
+  console.log({ broadcaster });
+
   // if streamer is offline
   if (!broadcaster.online) {
     return res.status(201).json({
@@ -34,10 +38,13 @@ api.post('/firsts', async (req: Request, res: Response) => {
   }
 
   // get viewer
-  let viewer = await viewerReposiroty.get({
-    name: viewerName,
-    broadcasterName,
-  });
+  let viewer = await viewerReposiroty.get(
+    {
+      name: viewerName,
+      broadcasterName,
+    },
+    { fields: ['name', 'broadcasterName', 'firstCount'] },
+  );
 
   // when broadcaster is new, viewer is first and must be new
   if (!broadcaster) {
@@ -157,8 +164,6 @@ api.post('/firsts', async (req: Request, res: Response) => {
 api.get('/firsts/:broadcaster/:viewer', async (req: Request, res: Response) => {
   return { status: 'ok' };
 });
-
-api.use(corsMiddleware);
 
 export const handler = async (event: APIGatewayEvent, context: Context) => {
   return api.run(event, context);
