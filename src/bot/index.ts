@@ -42,7 +42,6 @@ const initChatBot = () =>
     }),
   );
 
-// TMI listener setup
 const TMI_OPTIONS: Options = {
   identity: {
     username: botName,
