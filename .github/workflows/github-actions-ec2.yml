@@ -15,19 +15,23 @@ jobs:
     steps:
       - name: Checkout the files
         uses: actions/checkout@v2
-      
+
       - name: install and build
-        - run: yarn install
-        - run: yarn build
+        run: |
+          yarn install
+          yarn build
 
       - name: Deploy to Server 1
-        - run: cat BOT_NAME=${{secrets.BOT_NAME}} >> .env.dev
-        - run: cat TWITCH_CLIENT_ID=${{secrets.TWITCH_CLIENT_ID}} >> .env.dev
-        - run: cat TWITCH_CLIENT_SECRET=${{secrets.TWITCH_CLIENT_SECRET}} >> .env.dev
-        - run: cat TWITCH_TMI_OAUTH=${{secrets.TWITCH_TMI_OAUTH}} >> .env.dev
-        - run: cat TWITCH_EVENT_SUB_LISTENER_SECRET=${{secrets.TWITCH_EVENT_SUB_LISTENER_SECRET}} >> .env.dev
-        - run: cat APP_API_URL=${{secrets.APP_API_URL}} >> .env.dev
-        - run: cat NODE_ENV=${{secrets.NODE_ENV}} >> .env.dev
-        - run: cat ${{secrets.EC2_SSH_KEY}} > first-bot.pem 
-        - run: scp -i ./first-bot.pem -r package.json  ${{secrets.USERNAME}}@${{secrets.HOST_DNS}}:.
-        - run: scp -i ./first-bot.pem -r dist/bot  ${{secrets.USERNAME}}@${{secrets.HOST_DNS}}:.
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+        run: |
+          echo "BOT_NAME=${{secrets.BOT_NAME}}" >> .env.dev
+          echo "TWITCH_CLIENT_ID=${{secrets.TWITCH_CLIENT_ID}}" >> .env.dev
+          echo "TWITCH_CLIENT_SECRET=${{secrets.TWITCH_CLIENT_SECRET}}" >> .env.dev
+          echo "TWITCH_TMI_OAUTH=${{secrets.TWITCH_TMI_OAUTH}}" >> .env.dev
+          echo "TWITCH_EVENT_SUB_LISTENER_SECRET=${{secrets.TWITCH_EVENT_SUB_LISTENER_SECRET}}" >> .env.dev
+          echo "APP_API_URL=${{secrets.APP_API_URL}}" >> .env.dev
+          echo "NODE_ENV=${{secrets.NODE_ENV}}" >> .env.dev
+          echo "${{secrets.EC2_SSH_KEY}}" > first-bot.pem
+          scp -i ./first-bot.pem -r package.json  ${{secrets.USERNAME}}@${{secrets.HOST_DNS}}:.
+          scp -i ./first-bot.pem -r dist/bot  ${{secrets.USERNAME}}@${{secrets.HOST_DNS}}:.
