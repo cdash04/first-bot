@@ -24,9 +24,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
   }
 
   // get broadcaster
-  let broadcaster = await broadcasterRepository.get({
-    name: broadcasterName,
-  });
+  let broadcaster = await broadcasterRepository.get({ name: broadcasterName });
 
   console.log({ broadcaster });
 
@@ -38,13 +36,10 @@ api.post('/firsts', async (req: Request, res: Response) => {
   }
 
   // get viewer
-  let viewer = await viewerReposiroty.get(
-    {
-      name: viewerName,
-      broadcasterName,
-    },
-    { fields: ['name', 'broadcasterName', 'firstCount'] },
-  );
+  let viewer = await viewerReposiroty.get({
+    name: viewerName,
+    broadcasterName,
+  });
 
   // when broadcaster is new, viewer is first and must be new
   if (!broadcaster) {
@@ -54,11 +49,13 @@ api.post('/firsts', async (req: Request, res: Response) => {
         name: broadcasterName,
         currentFirstViewer: viewerName,
         currentFirstStreak: 1,
+        firstIsRedeemed: true,
       }),
       // create new viewer
       await viewerReposiroty.create({
         name: viewerName,
         broadcasterName,
+        firstCount: 1,
       }),
     ]);
     return res.status(200).json({
@@ -66,19 +63,26 @@ api.post('/firsts', async (req: Request, res: Response) => {
     });
   }
 
-  // when viewer is new but not broadcaster
-  if (!viewer) {
+  // when viewer is new but not broadcaster and first is not redeemed
+  if (!viewer && !broadcaster.firstIsRedeemed) {
     [broadcaster, viewer] = await Promise.all([
+      // update current streak viewer and current streak count
+      await broadcasterRepository.update(
+        { name: broadcasterName },
+        {
+          set: {
+            currentFirstViewer: viewerName,
+            currentFirstStreak: 1,
+            firstIsRedeemed: true,
+          },
+        },
+      ),
       // create new viewer
       await viewerReposiroty.create({
         name: viewerName,
         broadcasterName,
+        firstCount: 1,
       }),
-      // update current streak viewer and current streak count
-      await broadcasterRepository.update(
-        { name: broadcasterName },
-        { set: { currentFirstViewer: viewerName, currentFirstStreak: 1 } },
-      ),
     ]);
 
     return res.status(200).json({
@@ -162,7 +166,16 @@ api.post('/firsts', async (req: Request, res: Response) => {
 });
 
 api.get('/firsts/:broadcaster/:viewer', async (req: Request, res: Response) => {
-  return { status: 'ok' };
+  const { broadcaster: broadcasterName, viewer: viewerName } = req.params;
+  const viewer = await viewerReposiroty.get({
+    name: viewerName,
+    broadcasterName,
+  });
+
+  if (!viewer) {
+    return res.status(401).json({ message: `viewer ${viewerName} not found` });
+  }
+  return res.status(200).json(viewer);
 });
 
 export const handler = async (event: APIGatewayEvent, context: Context) => {

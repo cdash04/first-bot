@@ -22,6 +22,8 @@ api.post('/broadcasters', async (req: Request, res: Response) => {
   if (!broadcaster) {
     broadcaster = await broadcasterRepository.create({
       name: broadcasterName,
+      online: false,
+      firstIsRedeemed: false,
       currentFirstStreak: 0,
     });
   }
