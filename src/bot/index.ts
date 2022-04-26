@@ -32,11 +32,15 @@ const apiClient = new ApiClient({ authProvider });
 const onlineSubscriptionService = createOnlineSubscriptionService(apiClient);
 const offlineSubscriptionService = createOfflineSubscriptionService(apiClient);
 
-channels.forEach(async (channel) => {
-  await broadcasterService.initBroadcaster(channel);
-  onlineSubscriptionService.subscribeToOnlineEvent(channel);
-  offlineSubscriptionService.subscribeToOfflineEvent(channel);
-});
+const initChatBot = () =>
+  Promise.all(
+    channels.map(async (channel) => {
+      const username = channel.replace('#', '');
+      await broadcasterService.initBroadcaster(username);
+      await onlineSubscriptionService.subscribeToOnlineEvent(username);
+      await offlineSubscriptionService.subscribeToOfflineEvent(username);
+    }),
+  );
 
 // TMI listener setup
 const TMI_OPTIONS: Options = {
@@ -49,29 +53,8 @@ const TMI_OPTIONS: Options = {
 
 const chatClient = new TMI.Client(TMI_OPTIONS);
 
-const onConnectedHandler = async (addr: string, port: number) => {
-  console.log(`Successfully Connected to ${addr}:${port}`);
-};
-
-function logMessage(
-  target: string,
-  tags: ChatUserstate,
-  message: string,
-  self: boolean,
-) {
-  if (self) {
-    return;
-  }
-
-  const trimmedMessage = message.trim();
-
-  // log every message
-  console.log(`${target}, ${tags.username}: "${trimmedMessage}"`);
-}
-
 chatClient
-  .on('connected', onConnectedHandler)
-  .on('message', logMessage)
+  .on('connecting', initChatBot)
   .on('message', messageHandler(chatClient));
 
 chatClient.connect();
