@@ -15,26 +15,19 @@ jobs:
     steps:
       - name: Checkout the files
         uses: actions/checkout@v2
-
-      - name: Make envfile
-        uses: SpicyPizza/create-envfile@v1.3
-        with:
-          envkey_NODE_ENV: prod
-          envkey_TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
-          envkey_TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
-          envkey_BOT_NAME: ${{ secrets.BOT_NAME }}
-          envkey_TWITCH_TMI_OAUTH: ${{ secrets.TWITCH_TMI_OAUTH }}
-          envkey_APP_API_URL: ${{ secrets.APP_API_URL }}
-
-      - run: yarn install
-      - run: yarn build
+      
+      - name: install and build
+        - run: yarn install
+        - run: yarn build
 
       - name: Deploy to Server 1
-        uses: easingthemes/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{secrets.EC2_SSH_KEY}}
-          REMOTE_HOST: ${{secrets.HOST_DNS}}
-          REMOTE_USER: ${{secrets.USERNAME}}
-          SOURCE: ./dist/
-          EXCLUDE: "/dist/, /node_modules/ /package.json/"
-          TARGET: ./
+        - run: cat BOT_NAME=${{secrets.BOT_NAME}} >> .env.dev
+        - run: cat TWITCH_CLIENT_ID=${{secrets.TWITCH_CLIENT_ID}} >> .env.dev
+        - run: cat TWITCH_CLIENT_SECRET=${{secrets.TWITCH_CLIENT_SECRET}} >> .env.dev
+        - run: cat TWITCH_TMI_OAUTH=${{secrets.TWITCH_TMI_OAUTH}} >> .env.dev
+        - run: cat TWITCH_EVENT_SUB_LISTENER_SECRET=${{secrets.TWITCH_EVENT_SUB_LISTENER_SECRET}} >> .env.dev
+        - run: cat APP_API_URL=${{secrets.APP_API_URL}} >> .env.dev
+        - run: cat NODE_ENV=${{secrets.NODE_ENV}} >> .env.dev
+        - run: cat ${{secrets.EC2_SSH_KEY}} > first-bot.pem 
+        - run: scp -i ./first-bot.pem -r package.json  ${{secrets.USERNAME}}@${{secrets.HOST_DNS}}:.
+        - run: scp -i ./first-bot.pem -r dist/bot  ${{secrets.USERNAME}}@${{secrets.HOST_DNS}}:.
