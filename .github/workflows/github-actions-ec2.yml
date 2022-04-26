@@ -16,12 +16,12 @@ jobs:
       - name: Checkout the files
         uses: actions/checkout@v2
 
-      - name: install and build
+      - name: Install and Build
         run: |
           yarn install
           yarn build
 
-      - name: Deploy to Server 1
+      - name: Create dotenv file
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         run: |
@@ -31,7 +31,13 @@ jobs:
           echo "TWITCH_TMI_OAUTH=${{secrets.TWITCH_TMI_OAUTH}}" >> .env.dev
           echo "TWITCH_EVENT_SUB_LISTENER_SECRET=${{secrets.TWITCH_EVENT_SUB_LISTENER_SECRET}}" >> .env.dev
           echo "APP_API_URL=${{secrets.APP_API_URL}}" >> .env.dev
-          echo "NODE_ENV=${{secrets.NODE_ENV}}" >> .env.dev
-          echo "${{secrets.EC2_SSH_KEY}}" > first-bot.pem
-          scp -i ./first-bot.pem -r package.json  ${{secrets.USERNAME}}@${{secrets.HOST_DNS}}:.
-          scp -i ./first-bot.pem -r dist/bot  ${{secrets.USERNAME}}@${{secrets.HOST_DNS}}:.
+          echo "NODE_ENV=dev" >> .env.dev
+
+      - name: Deploy to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST_DNS }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: ".env.dev,package.json,dist/bot"
+          target: "."
