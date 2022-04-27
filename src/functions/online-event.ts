@@ -25,20 +25,19 @@ api.post('/events/online', async (req: Request, res: Response) => {
   });
 
   if (!broadcaster) {
-    await broadcasterRepository.create({
-      name: broadcasterName,
-      online: true,
-      firstIsRedeemed: false,
-      currentFirstStreak: 0,
-    });
-  } else {
-    await broadcasterRepository.update(
-      { name: broadcasterName },
-      { set: { online: true, firstIsRedeemed: false } },
-    );
+    return res
+      .status(401)
+      .json({ message: `broadcaster ${broadcasterName} not found` });
   }
 
-  return res.status(200);
+  await broadcasterRepository.update(
+    { name: broadcasterName },
+    { set: { online: true, firstIsRedeemed: false } },
+  );
+
+  return res
+    .status(200)
+    .json({ message: `${broadcasterName} is now set online` });
 });
 
 export const handler = async (event: APIGatewayEvent, context: Context) => {

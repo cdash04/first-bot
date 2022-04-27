@@ -90,6 +90,19 @@ api.post('/firsts', async (req: Request, res: Response) => {
     });
   }
 
+  // when viewer is new but the first is already redeemed
+  if (!viewer && broadcaster.firstIsRedeemed) {
+    const viewer = await viewerReposiroty.create({
+      name: viewerName,
+      broadcasterName,
+      firstCount: 0,
+    });
+
+    return res.status(200).json({
+      message: `Sorry @${viewer.name}, too late broo, @${broadcaster.currentFirstViewer} has already redeemed the first. Next time, git gud!`,
+    });
+  }
+
   // when firstIsRedeemed and first is redemeed by the same person
   if (
     broadcaster.firstIsRedeemed &&

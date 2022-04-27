@@ -24,25 +24,20 @@ api.post('/events/offline', async (req: Request, res: Response) => {
     name: broadcasterName,
   });
 
-  if (!broadcasterName) {
-    return res.status(400);
-  }
-
   if (!broadcaster) {
-    await broadcasterRepository.create({
-      name: broadcasterName,
-      online: false,
-      firstIsRedeemed: false,
-      currentFirstStreak: 0,
-    });
-  } else {
-    await broadcasterRepository.update(
-      { name: broadcasterName },
-      { set: { online: false, firstIsRedeemed: false } },
-    );
+    return res
+      .status(401)
+      .json({ message: `broadcaster ${broadcasterName} not found` });
   }
 
-  return res.status(200);
+  await broadcasterRepository.update(
+    { name: broadcasterName },
+    { set: { online: false, firstIsRedeemed: false } },
+  );
+
+  return res
+    .status(200)
+    .json({ message: `${broadcasterName} is now set offline` });
 });
 
 export const handler = async (event: APIGatewayEvent, context: Context) => {
