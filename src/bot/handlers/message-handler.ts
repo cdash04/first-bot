@@ -4,6 +4,7 @@ import { messageHasCommand } from '../utils/message-command';
 
 enum Command {
   First = 'first',
+  Leaderboard = 'leaderboard',
 }
 
 interface MessageResponse {
@@ -34,6 +35,13 @@ export const messageHandler =
         broadcaster,
         viewer: username,
       });
+      sayMessage(result);
+    }
+
+    if (messageHasCommand(message, Command.Leaderboard)) {
+      const result = await apiClient.get<MessageResponse>(
+        `/leaderboards/${broadcaster}`,
+      );
       sayMessage(result);
     }
   };

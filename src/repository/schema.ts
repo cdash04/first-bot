@@ -12,8 +12,8 @@ const Broadcaster = {
 };
 
 const Viewer = {
-  pk: { type: String, value: 'viewer:${name}' },
-  sk: { type: String, value: 'viewer:${broadcasterName}' },
+  pk: { type: String, value: 'viewer:${broadcasterName}' },
+  sk: { type: String, value: 'viewer:${name}' },
   name: { type: String, required: true },
   broadcasterName: { type: String, required: true },
   firstCount: { type: Number, value: '1' },

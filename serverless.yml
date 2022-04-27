@@ -104,6 +104,19 @@ functions:
           path: /events/offline/{proxy+}
           method: ANY
           cors: true
+  leaderboard:
+    handler: dist/functions/leaderboard.handler
+    layers:
+      - { Ref: NodeModulesLambdaLayer }
+    events:
+      - http:
+          path: /leaderboards/
+          method: ANY
+          cors: true
+      - http:
+          path: /leaderboards/{proxy+}
+          method: ANY
+          cors: true
 
 resources:
   Resources:
