@@ -16,7 +16,7 @@ const Viewer = {
   sk: { type: String, value: 'viewer:${name}' },
   name: { type: String, required: true },
   broadcasterName: { type: String, required: true },
-  firstCount: { type: Number, value: '1' },
+  firstCount: { type: Number },
 };
 
 export const Schema = {

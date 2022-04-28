@@ -4,7 +4,9 @@ import { messageHasCommand } from '../utils/message-command';
 
 enum Command {
   First = 'first',
-  Leaderboard = 'leaderboard',
+  LeaderBoard = 'leaderboard',
+  PersonalBest = 'pb',
+  CurrentStreak = 'streak',
 }
 
 interface MessageResponse {
@@ -27,7 +29,7 @@ export const messageHandler =
     }: {
       data: MessageResponse;
     }) => {
-      await chatClient.say(target, message);
+      chatClient.say(target, message);
     };
 
     if (messageHasCommand(message, Command.First)) {
@@ -36,11 +38,28 @@ export const messageHandler =
         viewer: username,
       });
       sayMessage(result);
+      return;
     }
 
-    if (messageHasCommand(message, Command.Leaderboard)) {
+    if (messageHasCommand(message, Command.LeaderBoard)) {
       const result = await apiClient.get<MessageResponse>(
         `/leaderboards/${broadcaster}`,
+      );
+      sayMessage(result);
+      return;
+    }
+
+    if (messageHasCommand(message, Command.PersonalBest)) {
+      const result = await apiClient.get<MessageResponse>(
+        `/first/${broadcaster}/${username}`,
+      );
+      sayMessage(result);
+      return;
+    }
+
+    if (messageHasCommand(message, Command.CurrentStreak)) {
+      const result = await apiClient.get<MessageResponse>(
+        `/leaderboards/${broadcaster}/current-streak`,
       );
       sayMessage(result);
     }

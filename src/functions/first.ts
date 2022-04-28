@@ -3,7 +3,7 @@ import createAPI, { Request, Response } from 'lambda-api';
 
 import {
   broadcasterRepository,
-  viewerReposiroty,
+  viewerRepository,
 } from '../repository/dynamo-repository';
 
 import { corsMiddleware } from '../middlewares/cors';
@@ -36,7 +36,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
   }
 
   // get viewer
-  let viewer = await viewerReposiroty.get({
+  let viewer = await viewerRepository.get({
     name: viewerName,
     broadcasterName,
   });
@@ -52,14 +52,14 @@ api.post('/firsts', async (req: Request, res: Response) => {
         firstIsRedeemed: true,
       }),
       // create new viewer
-      await viewerReposiroty.create({
+      await viewerRepository.create({
         name: viewerName,
         broadcasterName,
         firstCount: 1,
       }),
     ]);
     return res.status(200).json({
-      message: `Congratz @${viewerName}, you are the first ever to this channel. Starting a whole new adventure.`,
+      message: `Congrats @${viewerName}, you are the first ever to this channel. Starting a whole new adventure.`,
     });
   }
 
@@ -78,7 +78,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
         },
       ),
       // create new viewer
-      await viewerReposiroty.create({
+      await viewerRepository.create({
         name: viewerName,
         broadcasterName,
         firstCount: 1,
@@ -86,20 +86,20 @@ api.post('/firsts', async (req: Request, res: Response) => {
     ]);
 
     return res.status(200).json({
-      message: `Congratz @${viewer.name}, it is your first first. Starting a new streak.`,
+      message: `Congrats @${viewer.name}, it is your first first. Starting a new streak.`,
     });
   }
 
   // when viewer is new but the first is already redeemed
   if (!viewer && broadcaster.firstIsRedeemed) {
-    const viewer = await viewerReposiroty.create({
+    const viewer = await viewerRepository.create({
       name: viewerName,
       broadcasterName,
       firstCount: 0,
     });
 
     return res.status(200).json({
-      message: `Sorry @${viewer.name}, too late broo, @${broadcaster.currentFirstViewer} has already redeemed the first. Next time, git gud!`,
+      message: `Sorry @${viewer.name}, too late bro, @${broadcaster.currentFirstViewer} has already redeemed the first. Next time, git gud!`,
     });
   }
 
@@ -119,7 +119,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
     broadcaster.currentFirstViewer !== viewer.name
   ) {
     return res.status(200).json({
-      message: `Sorry @${viewerName}, too late broo, @${broadcaster.currentFirstViewer} has already redeemed the first. Next time, git gud!`,
+      message: `Sorry @${viewerName}, too late bro, @${broadcaster.currentFirstViewer} has already redeemed the first. Next time, git gud!`,
     });
   }
 
@@ -138,7 +138,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
         },
       ),
       // add 1 to viewer count
-      viewerReposiroty.update(
+      viewerRepository.update(
         {
           name: viewer.name,
           broadcasterName: viewer.broadcasterName,
@@ -148,7 +148,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
     ]);
 
     return res.status(200).json({
-      message: `Congratz @${viewer.name}, you are the first, You've been first ${viewer.firstCount} time(s) in total. Starting a new streak.`,
+      message: `Congrats @${viewer.name}, you are the first, You've been first ${viewer.firstCount} time(s) in total. Starting a new streak.`,
     });
   }
 
@@ -161,7 +161,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
         { add: { currentFirstStreak: 1 }, set: { firstIsRedeemed: true } },
       ),
       // add 1 to viewer count
-      viewerReposiroty.update(
+      viewerRepository.update(
         {
           name: viewer.name,
           broadcasterName: viewer.broadcasterName,
@@ -171,26 +171,40 @@ api.post('/firsts', async (req: Request, res: Response) => {
     ]);
 
     return res.status(200).json({
-      message: `Congratz @${viewer.name}, you are the first, You've been first ${viewer.firstCount} time(s) in total. Curently on a streak of ${broadcaster.currentFirstStreak} first(s).`,
+      message: `Congrats @${viewer.name}, you are the first, You've been first ${viewer.firstCount} time(s) in total. Currently on a streak of ${broadcaster.currentFirstStreak} first(s).`,
     });
   }
 
-  return res.status(400).json({ message: 'first message was unhandled' });
+  return res.status(400).json({ errorMessage: 'first message was unhandled' });
 });
 
 api.get('/firsts/:broadcaster/:viewer', async (req: Request, res: Response) => {
   const { broadcaster: broadcasterName, viewer: viewerName } = req.params;
-  const viewer = await viewerReposiroty.get({
+
+  // when viewer is the broadcaster
+  if (broadcasterName === viewerName) {
+    return res.status(200).json({
+      message: `@${broadcasterName}, you cannot first yourself. Therefore, you are dead last`,
+    });
+  }
+
+  let viewer = await viewerRepository.get({
     name: viewerName,
     broadcasterName,
   });
 
   if (!viewer) {
-    return res.status(401).json({ message: `viewer ${viewerName} not found` });
+    viewer = await viewerRepository.create({
+      broadcasterName,
+      name: viewerName,
+      firstCount: 0,
+    });
   }
-  return res.status(200).json(viewer);
+
+  return res.status(200).json({
+    message: `@${viewer.name}, you currently have ${viewer.firstCount} first(s)`,
+  });
 });
 
-export const handler = async (event: APIGatewayEvent, context: Context) => {
-  return api.run(event, context);
-};
+export const handler = async (event: APIGatewayEvent, context: Context) =>
+  api.run(event, context);

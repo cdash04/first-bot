@@ -14,7 +14,7 @@ const table = new Table({
   logger: true,
 });
 
-export const viewerReposiroty = table.getModel<ViewerType>('Viewer');
+export const viewerRepository = table.getModel<ViewerType>('Viewer');
 
 export const broadcasterRepository =
   table.getModel<BroadcasterType>('Broadcaster');

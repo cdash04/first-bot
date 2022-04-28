@@ -31,6 +31,35 @@ api.post('/broadcasters', async (req: Request, res: Response) => {
   return res.status(200).json({ broadcaster });
 });
 
+api.get(
+  '/broadcasters/:broadcaster/current-streak',
+  async (req: Request, res: Response) => {
+    const { broadcaster: broadcasterName } = req.params;
+
+    const broadcaster = await broadcasterRepository.get({
+      name: broadcasterName,
+    });
+
+    // when broadcaster does not exist
+    if (!broadcaster) {
+      return res
+        .status(401)
+        .json({ message: `broadcaster @${broadcasterName} not found` });
+    }
+
+    // when broadcaster has no first yet
+    if (!broadcaster.currentFirstStreak) {
+      return res.status(202).json({
+        message: `No first has been redeemed yet with @${broadcaster.name}, quick, it might be you.`,
+      });
+    }
+
+    return res.status(200).json({
+      message: `Current streak hold by @${broadcaster.currentFirstViewer} with ${broadcaster.currentFirstStreak} first(s)`,
+    });
+  },
+);
+
 export const handler = async (event: APIGatewayEvent, context: Context) => {
   return api.run(event, context);
 };
