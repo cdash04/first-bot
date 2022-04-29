@@ -24,7 +24,6 @@ export const messageHandler =
     message: string,
     self: boolean,
   ): Promise<void> => {
-
     // do not consider message sent by the bot
     if (self) {
       return;

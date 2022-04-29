@@ -51,7 +51,7 @@ jobs:
           Host dev
             HostName $SSH_HOST
             User $SSH_USER
-            IdentityFile ~/.ssh/staging.key
+            IdentityFile ~/.ssh/dev.key
             StrictHostKeyChecking no
           END
         env:
