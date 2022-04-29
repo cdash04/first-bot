@@ -51,7 +51,7 @@ export const messageHandler =
 
     if (messageHasCommand(message, Command.PersonalBest)) {
       const result = await apiClient.get<MessageResponse>(
-        `/first/${broadcaster}/${username}`,
+        `/firsts/${broadcaster}/${username}`,
       );
       sayMessage(result);
       return;
@@ -59,7 +59,7 @@ export const messageHandler =
 
     if (messageHasCommand(message, Command.CurrentStreak)) {
       const result = await apiClient.get<MessageResponse>(
-        `/leaderboards/${broadcaster}/current-streak`,
+        `/broadcasters/${broadcaster}/current-streak`,
       );
       sayMessage(result);
     }
