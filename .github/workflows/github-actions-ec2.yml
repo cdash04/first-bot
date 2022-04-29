@@ -41,3 +41,27 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: ".env.dev,package.json,dist/bot"
           target: "."
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/dev.key
+          chmod 600 ~/.ssh/dev.key
+          cat >>~/.ssh/config <<END
+          Host dev
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ secrets.USERNAME }}
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          SSH_HOST: ${{ secrets.HOST_DNS }}
+
+      - name: Stop the server
+        run: ssh dev 'pm2 stop 0'
+
+      - name: Start the server
+        if: ${{ always() }}
+        run: ssh dev 'pm2 start 0'

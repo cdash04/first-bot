@@ -7,6 +7,9 @@ enum Command {
   LeaderBoard = 'leaderboard',
   PersonalBest = 'pb',
   CurrentStreak = 'streak',
+  FirstBotName = 'firstBot',
+  Credits = 'botCredits',
+  Commands = 'firstBotCommands',
 }
 
 interface MessageResponse {
@@ -21,6 +24,12 @@ export const messageHandler =
     message: string,
     self: boolean,
   ): Promise<void> => {
+
+    // do not consider message sent by the bot
+    if (self) {
+      return;
+    }
+
     const broadcaster = target.replace('#', '');
     const { username } = tags;
 
@@ -62,5 +71,30 @@ export const messageHandler =
         `/broadcasters/${broadcaster}/current-streak`,
       );
       sayMessage(result);
+      return;
+    }
+
+    if (messageHasCommand(message, Command.Commands)) {
+      sayMessage({
+        data: {
+          message: Object.values(Command).reduce(
+            (message, command) => `${message} !${command}`,
+            '',
+          ),
+        },
+      });
+      return;
+    }
+
+    if (
+      messageHasCommand(message, Command.Credits) ||
+      messageHasCommand(message, Command.FirstBotName)
+    ) {
+      sayMessage({
+        data: {
+          message:
+            'FirstBot is an open source, self hosting solution to know who is the first in your chat. Follow me on Github: https://github.com/cdash04, twitch https://www.twitch.tv/cdash01/ or discord: https://discord.gg/dSBZZyyybH :)',
+        },
+      });
     }
   };
