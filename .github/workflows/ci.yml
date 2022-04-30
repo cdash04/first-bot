@@ -21,6 +21,7 @@ jobs:
       with:
         node-version: 14.x
 
+    - name: Run tests
       run: |
         yarn install
         yarn lint
