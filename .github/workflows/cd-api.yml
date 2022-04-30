@@ -1,0 +1,55 @@
+name: CD Api
+
+on:
+  push:
+    paths:
+      - 'src/functions/**'
+      - 'src/middlewares/**'
+      - 'src/repository/**'
+    branches:
+      - main
+
+env:
+  CI: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set env to prod
+      if: endsWith(github.ref, '/main')
+      env:
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+      run: |
+        echo "::set-env name=NODE_ENV::dev"
+        echo "::set-env name=TWITCH_EVENT_SUB_LISTENER_SECRET::${{ secrets.TWITCH_EVENT_SUB_LISTENER_SECRET }}"
+    - uses: actions/checkout@v2
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ca-central-1
+
+    - name: Setup Node version
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+
+    - name: Install Serverless Framework
+      run: npm install -g serverless
+
+    - name: Build App and pre-deploy
+      id: build
+      run: |
+        yarn install --frozen-lockfile
+        yarn build
+        ./prepare-module-layer.sh
+
+    - name: Deploy to aws
+      id: deploy
+      run: |
+        NODE_ENV=$NODE_ENV TWITCH_EVENT_SUB_LISTENER_SECRET=$TWITCH_EVENT_SUB_LISTENER_SECRET sls deploy

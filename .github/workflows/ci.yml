@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+env:
+  CI: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Node version
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+
+      run: |
+        yarn install
+        yarn lint
+        yarn validate-prettiness
+        yarn test
+        yarn build
+      env:
+        CI: true
