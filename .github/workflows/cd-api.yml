@@ -25,6 +25,7 @@ jobs:
       run: |
         echo "::set-env name=NODE_ENV::dev"
         echo "::set-env name=TWITCH_EVENT_SUB_LISTENER_SECRET::${{ secrets.TWITCH_EVENT_SUB_LISTENER_SECRET }}"
+
     - uses: actions/checkout@v2
 
     - name: Configure AWS Credentials
