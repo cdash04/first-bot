@@ -109,7 +109,9 @@ api.post('/firsts', async (req: Request, res: Response) => {
     broadcaster.currentFirstViewer === viewer.name
   ) {
     return res.status(200).json({
-      message: `Geez @${viewerName}, you already got the first for this stream session, calm down you greedy`,
+      message: `Geez @${
+        viewerName === 'cdash01' ? 'daddy' : viewerName
+      }, you already got the first for this stream session, calm down you greedy`,
     });
   }
 
