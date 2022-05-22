@@ -48,7 +48,7 @@ jobs:
       run: |
         yarn install --frozen-lockfile
         yarn build
-        sudo ./prepare-module-layer.sh
+        ./prepare-module-layer.sh
 
     - name: Deploy to aws
       id: deploy
