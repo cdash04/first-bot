@@ -289,6 +289,7 @@ api.post('/firsts/steal', async (req: Request, res: Response) => {
         currentFirstViewer: viewerName,
         currentFirstStreak: 1,
         firstIsRedeemed: true,
+        bits: +bits,
       },
     },
   );
