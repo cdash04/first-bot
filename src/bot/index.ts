@@ -4,6 +4,7 @@ import TMI, { Options } from 'tmi.js';
 import { program } from 'commander';
 
 import { messageHandler } from './handlers/message-handler';
+import { cheerHandler } from './handlers/cheer-handler';
 import {
   broadcasterService,
   createOfflineSubscriptionService,
@@ -55,6 +56,7 @@ const chatClient = new TMI.Client(TMI_OPTIONS);
 
 chatClient
   .on('connecting', initChatBot)
-  .on('message', messageHandler(chatClient));
+  .on('message', messageHandler(chatClient))
+  .on('cheer', cheerHandler(chatClient));
 
 chatClient.connect();

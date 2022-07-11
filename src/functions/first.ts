@@ -208,5 +208,95 @@ api.get('/firsts/:broadcaster/:viewer', async (req: Request, res: Response) => {
   });
 });
 
+api.post('/firsts/steal', async (req: Request, res: Response) => {
+  const { broadcaster: broadcasterName, viewer: viewerName, bits } = req.body;
+
+  // broadcaster and viewer are the same person
+  if (broadcasterName === viewerName) {
+    return res.status(200).json({
+      message: `Really @${broadcasterName}? Did you try to first yourself? With freaking bits? That's sad bro.`,
+    });
+  }
+
+  let broadcaster = await broadcasterRepository.get({
+    name: broadcasterName,
+  });
+
+  // when streamer has not enabled pay to win
+  if (!broadcaster.payToWinIsEnabled) {
+    return res.status(200).json({
+      message: `@${broadcasterName} did not enabled pay to win.`,
+    });
+  }
+
+  // when streamer is offline
+  if (!broadcaster.online) {
+    return res.status(201).json({
+      message: `@${broadcaster.name} is offline, you cannot first someone who's offline, even with bits`,
+    });
+  }
+
+  // when cheered bits are less than previous first
+  if (+bits <= (broadcaster.bits ?? 0)) {
+    return res.status(201).json({
+      message: `@${viewerName} you cannot steal the first since @${broadcaster.currentFirstViewer} is less cheapos than you.`,
+    });
+  }
+
+  // when cheered bits are more than previous first
+
+  let viewer = await viewerRepository.get({
+    name: viewerName,
+    broadcasterName,
+  });
+
+  // when viewer is new
+  if (!viewer) {
+    viewer = await viewerRepository.create({
+      broadcasterName,
+      name: viewerName,
+      firstCount: 0,
+    });
+  }
+
+  // remove first from last viewer who got stolen the first
+  const stolenViewer = await viewerRepository.update(
+    {
+      name: broadcaster.currentFirstViewer,
+      broadcasterName,
+    },
+    {
+      add: { firstCount: -1 },
+    },
+  );
+
+  // update first for the stealer
+  viewer = await viewerRepository.update(
+    {
+      name: viewerName,
+      broadcasterName,
+    },
+    {
+      add: { firstCount: 1 },
+    },
+  );
+
+  // update first for the broadcaster
+  broadcaster = await broadcasterRepository.update(
+    { name: broadcaster.name },
+    {
+      set: {
+        currentFirstViewer: viewerName,
+        currentFirstStreak: 1,
+        firstIsRedeemed: true,
+      },
+    },
+  );
+
+  return res.status(200).json({
+    message: `Congrats!!! @${viewerName} stole the first from @${stolenViewer.name} with ${bits} bit(s). starting a new streak.`,
+  });
+});
+
 export const handler = async (event: APIGatewayEvent, context: Context) =>
   api.run(event, context);

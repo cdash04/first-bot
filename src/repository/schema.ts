@@ -10,6 +10,7 @@ const Broadcaster = {
   currentFirstViewer: { type: String },
   currentFirstStreak: { type: Number },
   payToWinIsEnabled: { type: Boolean },
+  bits: { type: Number },
 };
 
 const Viewer = {
