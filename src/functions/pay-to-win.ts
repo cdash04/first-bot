@@ -32,6 +32,7 @@ api.post('/pay-to-win', async (req: Request, res: Response) => {
     });
   }
 
+  // toggle pay to win status
   broadcaster = await broadcasterRepository.update(
     {
       name: broadcasterName,
