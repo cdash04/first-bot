@@ -9,6 +9,7 @@ const Broadcaster = {
   firstIsRedeemed: { type: Boolean },
   currentFirstViewer: { type: String },
   currentFirstStreak: { type: Number },
+  payToWinIsEnabled: { type: Boolean },
 };
 
 const Viewer = {
