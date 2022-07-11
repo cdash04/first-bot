@@ -10,6 +10,7 @@ enum Command {
   FirstBotName = 'firstBot',
   Credits = 'botCredits',
   Commands = 'firstBotCommands',
+  PayToWin = 'payToWin',
 }
 
 interface MessageResponse {
@@ -53,6 +54,15 @@ export const messageHandler =
       const result = await apiClient.get<MessageResponse>(
         `/leaderboards/${broadcaster}`,
       );
+      sayMessage(result);
+      return;
+    }
+
+    if (messageHasCommand(message, Command.PayToWin)) {
+      const result = await apiClient.post<MessageResponse>('/pay-to-win', {
+        broadcaster,
+        viewer: username,
+      });
       sayMessage(result);
       return;
     }

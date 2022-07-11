@@ -117,6 +117,19 @@ functions:
           path: /leaderboards/{proxy+}
           method: ANY
           cors: true
+  pay-to-win:
+    handler: dist/functions/pay-to-win.handler
+    layers:
+      - { Ref: NodeModulesLambdaLayer }
+    events:
+      - http:
+          path: /pay-to-win/
+          method: ANY
+          cors: true
+      - http:
+          path: /pay-to-win/{proxy+}
+          method: ANY
+          cors: true
 
 resources:
   Resources:
