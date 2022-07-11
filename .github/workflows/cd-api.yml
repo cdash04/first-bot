@@ -52,7 +52,7 @@ jobs:
     - name: Create node module layer
       id: layer
       run: |
-        chmod +x "${GITHUB_WORKSPACE}/.github/script.sh"
+        chmod +x "${GITHUB_WORKSPACE}/prepare-module-layer.sh"
         "${GITHUB_WORKSPACE}/prepare-module-layer.sh"
 
     - name: Deploy to aws
