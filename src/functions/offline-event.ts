@@ -32,7 +32,7 @@ api.post('/events/offline', async (req: Request, res: Response) => {
 
   await broadcasterRepository.update(
     { name: broadcasterName },
-    { set: { online: false, firstIsRedeemed: false } },
+    { set: { online: false, firstIsRedeemed: false, bits: 0 } },
   );
 
   return res
