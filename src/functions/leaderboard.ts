@@ -22,6 +22,7 @@ api.get('/leaderboards/:broadcaster', async (req: Request, res: Response) => {
 
   const leaderboard = viewers
     .sort((viewerOne, viewerTwo) => viewerTwo.firstCount - viewerOne.firstCount)
+    .filter((viewer) => viewer.firstCount)
     .reduce(
       (message, viewer, i) =>
         `${message}\n #${i + 1}: @${viewer.name} with ${

@@ -6,7 +6,7 @@ enum Command {
   First = 'first',
   LeaderBoard = 'leaderboard',
   PersonalBest = 'pb',
-  CurrentStreak = 'streak',
+  CurrentStreak = 'current',
   FirstBotName = 'firstBot',
   Credits = 'botCredits',
   Commands = 'firstBotCommands',

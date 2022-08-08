@@ -55,7 +55,11 @@ api.get(
     }
 
     return res.status(200).json({
-      message: `Current streak hold by @${broadcaster.currentFirstViewer} with ${broadcaster.currentFirstStreak} first(s)`,
+      message: `Current streak hold by @${
+        broadcaster.currentFirstViewer
+      } with ${broadcaster.currentFirstStreak} first(s) ${
+        broadcaster.bits ? `purchased with ${broadcaster.bits} bit(s)` : ''
+      }.`,
     });
   },
 );
