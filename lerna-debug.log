@@ -1,0 +1,21 @@
+0 silly argv {
+0 silly argv   _: [ 'create' ],
+0 silly argv   lernaVersion: '5.5.0',
+0 silly argv   '$0': '/Users/christophe.ashworth/code/perso/first-bot/node_modules/.bin/lerna',
+0 silly argv   name: 'domain'
+0 silly argv }
+1 notice cli v5.5.0
+2 verbose rootPath /Users/christophe.ashworth/code/perso/first-bot
+3 error Error: canceled
+3 error     at Interface.<anonymous> (/Users/christophe.ashworth/code/perso/first-bot/node_modules/read/lib/read.js:66:13)
+3 error     at Interface.emit (node:events:526:28)
+3 error     at Interface._ttyWrite (node:readline:1081:16)
+3 error     at ReadStream.onkeypress (node:readline:288:10)
+3 error     at ReadStream.emit (node:events:526:28)
+3 error     at emitKeys (node:internal/readline/utils:358:14)
+3 error     at emitKeys.next (<anonymous>)
+3 error     at ReadStream.onData (node:internal/readline/emitKeypressEvents:61:36)
+3 error     at ReadStream.emit (node:events:526:28)
+3 error     at addChunk (node:internal/streams/readable:315:12)
+3 error     at readableAddChunk (node:internal/streams/readable:289:9)
+3 error     at ReadStream.Readable.push (node:internal/streams/readable:228:10)

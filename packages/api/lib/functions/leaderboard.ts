@@ -1,7 +1,7 @@
 import { APIGatewayEvent, Context } from 'aws-lambda';
 import createAPI, { Request, Response } from 'lambda-api';
-import { viewerRepository } from '../repository/dynamo-repository';
 import { corsMiddleware } from '../middlewares/cors';
+import { viewerRepository } from '../repository/dynamo-repository';
 
 const api = createAPI({});
 
@@ -21,7 +21,10 @@ api.get('/leaderboards/:broadcaster', async (req: Request, res: Response) => {
   console.log({ viewers });
 
   const leaderboard = viewers
-    .sort((viewerOne, viewerTwo) => viewerTwo.firstCount - viewerOne.firstCount)
+    .sort(
+      (viewerOne, viewerTwo) =>
+        (viewerTwo.firstCount as number) - (viewerOne.firstCount as number),
+    )
     .filter((viewer) => viewer.firstCount)
     .reduce(
       (message, viewer, i) =>

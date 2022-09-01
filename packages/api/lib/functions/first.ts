@@ -29,7 +29,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
   console.log({ broadcaster });
 
   // if streamer is offline
-  if (!broadcaster.online) {
+  if (broadcaster && !broadcaster.online) {
     return res.status(201).json({
       message: `@${broadcaster.name} is offline, you cannot first someone who's offline`,
     });
@@ -101,6 +101,10 @@ api.post('/firsts', async (req: Request, res: Response) => {
     return res.status(200).json({
       message: `Sorry @${viewer.name}, too late bro, @${broadcaster.currentFirstViewer} has already redeemed the first. Next time, git gud!`,
     });
+  }
+
+  if (!viewer) {
+    return res.status(401).json({ error: 'viewer was not created' });
   }
 
   // when firstIsRedeemed and first is redemeed by the same person
@@ -221,6 +225,13 @@ api.post('/firsts/steal', async (req: Request, res: Response) => {
   let broadcaster = await broadcasterRepository.get({
     name: broadcasterName,
   });
+
+  if (!broadcaster) {
+    return res.status(200).json({
+      message:
+        'first has not been redeemed yet why paying when you can take it free?s.',
+    });
+  }
 
   // when streamer has not enabled pay to win
   if (!broadcaster.payToWinIsEnabled) {

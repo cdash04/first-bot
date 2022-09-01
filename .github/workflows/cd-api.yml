@@ -3,9 +3,7 @@ name: CD Api
 on:
   push:
     paths:
-      - 'src/functions/**'
-      - 'src/middlewares/**'
-      - 'src/repository/**'
+      - 'packages/api/**'
     branches:
       - main
 
