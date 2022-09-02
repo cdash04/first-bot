@@ -30,7 +30,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
 
   // if streamer is offline
   if (broadcaster && !broadcaster.online) {
-    return res.status(201).json({
+    return res.status(200).json({
       message: `@${broadcaster.name} is offline, you cannot first someone who's offline`,
     });
   }
@@ -58,6 +58,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
         firstCount: 1,
       }),
     ]);
+
     return res.status(200).json({
       message: `Congrats @${viewerName}, you are the first ever to this channel. Starting a whole new adventure.`,
     });
@@ -103,19 +104,13 @@ api.post('/firsts', async (req: Request, res: Response) => {
     });
   }
 
-  if (!viewer) {
-    return res.status(401).json({ error: 'viewer was not created' });
-  }
-
   // when firstIsRedeemed and first is redemeed by the same person
   if (
     broadcaster.firstIsRedeemed &&
     broadcaster.currentFirstViewer === viewer.name
   ) {
     return res.status(200).json({
-      message: `Geez @${
-        viewerName === 'cdash01' ? 'daddy' : viewerName
-      }, you already got the first for this stream session, calm down you greedy`,
+      message: `Geez @${viewerName}, you already got the first for this stream session, calm down you greedy`,
     });
   }
 

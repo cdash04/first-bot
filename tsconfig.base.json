@@ -11,8 +11,10 @@
         "composite": true,
         "paths": {
           "@api": ["packages/api/lib/*"],
-          "@bot": ["packages/bot/lib/*"]
+          "@bot": ["packages/bot/lib/*"],
+          "@domain": ["packages/domain-layer/lib/*"]
         }
     },
-    "include": ["packages"]
+    "include": ["packages"],
+    "exclude": ["node_modules"]
 }
