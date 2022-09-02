@@ -7,6 +7,7 @@
         "build": "lerna run build",
         "dev": "lerna run dev",
         "start": "lerna run start",
+        "build-layer": "lerna run build-layer",
         "deploy:dev": "lerna run deploy:dev",
         "test": "jest --coverage=false --verbose",
         "lint": "eslint packages/**/*.ts",
