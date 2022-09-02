@@ -1,10 +1,7 @@
 import { APIGatewayEvent, Context } from 'aws-lambda';
 import createAPI, { Request, Response } from 'lambda-api';
 
-import {
-  broadcasterRepository,
-  viewerRepository,
-} from '../repository/dynamo-repository';
+import { broadcasterRepository } from '../repository/dynamo-repository';
 
 import { corsMiddleware } from '../middlewares/cors';
 
