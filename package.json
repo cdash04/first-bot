@@ -10,7 +10,7 @@
         "build-layer": "lerna run build-layer",
         "deploy:dev": "lerna run deploy:dev",
         "test": "jest --coverage=false --verbose",
-        "lint": "eslint packages/**/*.ts",
+        "lint": "eslint packages/**",
         "lint:fix": "yarn lint --fix",
         "typecheck": "tsc --noEmit",
         "run-prettier": "prettier src/**/*.ts",
