@@ -23,7 +23,7 @@ jobs:
 
     - name: Run tests
       run: |
-        yarn bootstrap
+        yarn install
         yarn lint
         yarn validate-prettiness
         yarn test

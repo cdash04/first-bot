@@ -18,8 +18,8 @@ jobs:
 
       - name: Install and Build
         run: |
-          yarn bootstrap --scope=bot
-          yarn build --scope=bot
+          yarn install
+          yarn build
 
       - name: Create dotenv file
         env:
@@ -39,7 +39,7 @@ jobs:
           host: ${{ secrets.HOST_DNS }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: ".env.dev,package.json,packages/bot/dist"
+          source: ".env.dev,package.json,dist/bot"
           target: "."
 
       - name: Configure SSH
