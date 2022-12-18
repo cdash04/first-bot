@@ -13,7 +13,7 @@
         "lint": "eslint packages/**",
         "lint:fix": "yarn lint --fix",
         "typecheck": "tsc --noEmit",
-        "run-prettier": "prettier src/**/*.ts",
+        "run-prettier": "prettier packages/**/*.ts",
         "validate-prettiness": "yarn run-prettier -c",
         "make-prettier": "yarn run-prettier --write"
     },
