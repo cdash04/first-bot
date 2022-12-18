@@ -3,7 +3,9 @@ name: CD Api
 on:
   push:
     paths:
-      - 'packages/api/**'
+      - 'src/functions/**'
+      - 'src/middlewares/**'
+      - 'src/repository/**'
     branches:
       - main
 
@@ -44,14 +46,16 @@ jobs:
     - name: Build App and pre-deploy
       id: build
       run: |
-        yarn bootstrap --scope=api
-        yarn build --scope=api
+        yarn install --frozen-lockfile
+        yarn build
 
     - name: Create node module layer
       id: layer
-      run: yarn build-layer
+      run: |
+        chmod +x "${GITHUB_WORKSPACE}/prepare-module-layer.sh"
+        "${GITHUB_WORKSPACE}/prepare-module-layer.sh"
 
     - name: Deploy to aws
       id: deploy
       run: |
-        NODE_ENV=$NODE_ENV TWITCH_EVENT_SUB_LISTENER_SECRET=$TWITCH_EVENT_SUB_LISTENER_SECRET yarn deploy --scope=api
+        NODE_ENV=$NODE_ENV TWITCH_EVENT_SUB_LISTENER_SECRET=$TWITCH_EVENT_SUB_LISTENER_SECRET sls deploy

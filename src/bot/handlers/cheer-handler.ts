@@ -17,6 +17,7 @@ export const cheerHandler =
     userstate: ChatUserstate,
     message: string,
   ): Promise<void> => {
+
     const { username, bits } = userstate;
     const broadcaster = channel.replace('#', '');
 
