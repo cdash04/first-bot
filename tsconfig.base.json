@@ -1,0 +1,20 @@
+{
+    "name": "first-bot",
+    "compilerOptions": {
+      "baseUrl": ".",
+        "module": "commonjs",
+        "target": "es2017",
+        "moduleResolution": "node",
+        "noImplicitAny": true,
+        "esModuleInterop": true,
+        "sourceMap": true,
+        "composite": true,
+        "paths": {
+          "@api": ["packages/api/lib/*"],
+          "@bot": ["packages/bot/lib/*"],
+          "@domain": ["packages/domain-layer/lib/*"]
+        }
+    },
+    "include": ["packages"],
+    "exclude": ["node_modules"]
+}
