@@ -1,8 +1,7 @@
-import { ClientCredentialsAuthProvider } from '@twurple/auth';
-import { ApiClient } from '@twurple/api';
 import TMI, { Options } from 'tmi.js';
 import { program } from 'commander';
 
+import { twitchClient } from './twitch-client';
 import { messageHandler } from './handlers/message-handler';
 import { cheerHandler } from './handlers/cheer-handler';
 import {
@@ -20,18 +19,12 @@ program.parse();
 const { channels: channelsArgument } = program.opts<{ channels: string }>();
 const channels = channelsArgument.split(',').map((channel) => channel.trim());
 
-// creds, to delete and put into secrets later
-const clientId = process.env.TWITCH_CLIENT_ID;
-const clientSecret = process.env.TWITCH_CLIENT_SECRET;
 const botName = process.env.BOT_NAME;
 const tmiOauth = process.env.TWITCH_TMI_OAUTH;
 
-// setup Twitch client
-const authProvider = new ClientCredentialsAuthProvider(clientId, clientSecret);
-const apiClient = new ApiClient({ authProvider });
-
-const onlineSubscriptionService = createOnlineSubscriptionService(apiClient);
-const offlineSubscriptionService = createOfflineSubscriptionService(apiClient);
+const onlineSubscriptionService = createOnlineSubscriptionService(twitchClient);
+const offlineSubscriptionService =
+  createOfflineSubscriptionService(twitchClient);
 
 const initChatBot = () =>
   Promise.all(
@@ -45,6 +38,7 @@ const initChatBot = () =>
 
 // TMI listener setup
 const TMI_OPTIONS: Options = {
+  options: {},
   identity: {
     username: botName,
     password: tmiOauth,
@@ -55,6 +49,9 @@ const TMI_OPTIONS: Options = {
 const chatClient = new TMI.Client(TMI_OPTIONS);
 
 chatClient
+  .on('message', (channel, tags, message, self) => {
+    console.log({ channel, tags, message, self });
+  })
   .on('connecting', initChatBot)
   .on('message', messageHandler(chatClient))
   .on('cheer', cheerHandler(chatClient));

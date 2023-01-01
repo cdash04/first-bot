@@ -14,7 +14,7 @@ api.use(corsMiddleware);
 
 api.post('/firsts', async (req: Request, res: Response) => {
   console.log({ body: req.body });
-  const { broadcaster: broadcasterName, viewer: viewerName } = req.body;
+  const { broadcasterId, broadcasterName, viewerId, viewerName } = req.body;
 
   // broadcaster and viewer are the same person
   if (broadcasterName === viewerName) {
@@ -24,7 +24,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
   }
 
   // get broadcaster
-  let broadcaster = await broadcasterRepository.get({ name: broadcasterName });
+  let broadcaster = await broadcasterRepository.get({ id: broadcasterId });
 
   console.log({ broadcaster });
 
@@ -37,8 +37,8 @@ api.post('/firsts', async (req: Request, res: Response) => {
 
   // get viewer
   let viewer = await viewerRepository.get({
-    name: viewerName,
-    broadcasterName,
+    broadcasterId,
+    id: viewerId,
   });
 
   // when broadcaster is new, viewer is first and must be new
@@ -46,14 +46,17 @@ api.post('/firsts', async (req: Request, res: Response) => {
     [broadcaster, viewer] = await Promise.all([
       // create new broadcaster
       await broadcasterRepository.create({
+        id: broadcasterId,
         name: broadcasterName,
-        currentFirstViewer: viewerName,
+        currentFirstViewer: viewerId,
         currentFirstStreak: 1,
         firstIsRedeemed: true,
       }),
       // create new viewer
       await viewerRepository.create({
+        id: viewerId,
         name: viewerName,
+        broadcasterId,
         broadcasterName,
         firstCount: 1,
       }),
@@ -68,9 +71,10 @@ api.post('/firsts', async (req: Request, res: Response) => {
     [broadcaster, viewer] = await Promise.all([
       // update current streak viewer and current streak count
       await broadcasterRepository.update(
-        { name: broadcasterName },
+        { id: broadcaster.id },
         {
           set: {
+            broadcasterName,
             currentFirstViewer: viewerName,
             currentFirstStreak: 1,
             firstIsRedeemed: true,
@@ -79,7 +83,9 @@ api.post('/firsts', async (req: Request, res: Response) => {
       ),
       // create new viewer
       await viewerRepository.create({
+        id: viewerId,
         name: viewerName,
+        broadcasterId,
         broadcasterName,
         firstCount: 1,
       }),
@@ -93,7 +99,9 @@ api.post('/firsts', async (req: Request, res: Response) => {
   // when viewer is new but the first is already redeemed
   if (!viewer && broadcaster.firstIsRedeemed) {
     const viewer = await viewerRepository.create({
+      id: viewerId,
       name: viewerName,
+      broadcasterId,
       broadcasterName,
       firstCount: 0,
     });
@@ -106,19 +114,17 @@ api.post('/firsts', async (req: Request, res: Response) => {
   // when firstIsRedeemed and first is redemeed by the same person
   if (
     broadcaster.firstIsRedeemed &&
-    broadcaster.currentFirstViewer === viewer.name
+    broadcaster.currentFirstViewer === viewer.id
   ) {
     return res.status(200).json({
-      message: `Geez @${
-        viewerName === 'cdash01' ? 'daddy' : viewerName
-      }, you already got the first for this stream session, calm down you greedy`,
+      message: `Geez @${viewerName}, you already got the first for this stream session, calm down you greedy`,
     });
   }
 
   // when firstIsRedeemed and first is redemeed by another person
   if (
     broadcaster.firstIsRedeemed &&
-    broadcaster.currentFirstViewer !== viewer.name
+    broadcaster.currentFirstViewer !== viewer.id
   ) {
     return res.status(200).json({
       message: `Sorry @${viewerName}, too late bro, @${broadcaster.currentFirstViewer} has already redeemed the first. Next time, git gud!`,
@@ -126,14 +132,15 @@ api.post('/firsts', async (req: Request, res: Response) => {
   }
 
   // when !first has been redeemed by a new person
-  if (broadcaster.currentFirstViewer !== viewer.name) {
+  if (broadcaster.currentFirstViewer !== viewer.id) {
     [broadcaster, viewer] = await Promise.all([
       // init streak
       broadcasterRepository.update(
-        { name: broadcaster.name },
+        { id: broadcaster.id },
         {
           set: {
-            currentFirstViewer: viewerName,
+            broadcasterName,
+            currentFirstViewer: viewer.id,
             currentFirstStreak: 1,
             firstIsRedeemed: true,
           },
@@ -142,10 +149,10 @@ api.post('/firsts', async (req: Request, res: Response) => {
       // add 1 to viewer count
       viewerRepository.update(
         {
-          name: viewer.name,
-          broadcasterName: viewer.broadcasterName,
+          id: viewer.id,
+          broadcasterId: viewer.broadcasterId,
         },
-        { add: { firstCount: 1 } },
+        { add: { firstCount: 1 }, set: { name: viewerName, broadcasterName } },
       ),
     ]);
 
@@ -155,20 +162,23 @@ api.post('/firsts', async (req: Request, res: Response) => {
   }
 
   // when !first has been redeemed by the same person
-  if (broadcaster.currentFirstViewer === viewer.name) {
+  if (broadcaster.currentFirstViewer === viewer.id) {
     [broadcaster, viewer] = await Promise.all([
       // add 1 to the streak, since it continue and set firstIsRedeemed to true
       broadcasterRepository.update(
-        { name: broadcaster.name },
-        { add: { currentFirstStreak: 1 }, set: { firstIsRedeemed: true } },
+        { id: broadcaster.id },
+        {
+          add: { currentFirstStreak: 1 },
+          set: { broadcasterName, firstIsRedeemed: true },
+        },
       ),
       // add 1 to viewer count
       viewerRepository.update(
         {
-          name: viewer.name,
-          broadcasterName: viewer.broadcasterName,
+          id: viewer.id,
+          broadcasterId: viewer.broadcasterId,
         },
-        { add: { firstCount: 1 } },
+        { add: { firstCount: 1 }, set: { name: viewerName, broadcasterName } },
       ),
     ]);
 
@@ -180,36 +190,42 @@ api.post('/firsts', async (req: Request, res: Response) => {
   return res.status(400).json({ errorMessage: 'first message was unhandled' });
 });
 
-api.get('/firsts/:broadcaster/:viewer', async (req: Request, res: Response) => {
-  const { broadcaster: broadcasterName, viewer: viewerName } = req.params;
+api.get(
+  '/firsts/:broadcasterId/:viewerId',
+  async (req: Request, res: Response) => {
+    const { broadcasterId, viewerId } = req.params;
 
-  // when viewer is the broadcaster
-  if (broadcasterName === viewerName) {
+    // when viewer is the broadcaster
+    if (broadcasterId === viewerId) {
+      const broadcaster = await broadcasterRepository.get({
+        id: broadcasterId,
+      });
+      return res.status(200).json({
+        message: `@${broadcaster.name}, you cannot first yourself. Therefore, you are dead last`,
+      });
+    }
+
+    const viewer = await viewerRepository.get({
+      id: viewerId,
+      broadcasterId,
+    });
+
+    if (!viewer) {
+      return res.status(200).json({
+        message:
+          'You are new here, are you? try redeeming the first to create an entry before wanting to see your score.',
+      });
+    }
+
     return res.status(200).json({
-      message: `@${broadcasterName}, you cannot first yourself. Therefore, you are dead last`,
+      message: `@${viewer.name}, you currently have ${viewer.firstCount} first(s)`,
     });
-  }
-
-  let viewer = await viewerRepository.get({
-    name: viewerName,
-    broadcasterName,
-  });
-
-  if (!viewer) {
-    viewer = await viewerRepository.create({
-      broadcasterName,
-      name: viewerName,
-      firstCount: 0,
-    });
-  }
-
-  return res.status(200).json({
-    message: `@${viewer.name}, you currently have ${viewer.firstCount} first(s)`,
-  });
-});
+  },
+);
 
 api.post('/firsts/steal', async (req: Request, res: Response) => {
-  const { broadcaster: broadcasterName, viewer: viewerName, bits } = req.body;
+  const { broadcasterId, broadcasterName, viewerId, viewerName, bits } =
+    req.body;
 
   // broadcaster and viewer are the same person
   if (broadcasterName === viewerName) {
@@ -219,7 +235,7 @@ api.post('/firsts/steal', async (req: Request, res: Response) => {
   }
 
   let broadcaster = await broadcasterRepository.get({
-    name: broadcasterName,
+    id: broadcasterId,
   });
 
   // when streamer has not enabled pay to win
@@ -246,24 +262,27 @@ api.post('/firsts/steal', async (req: Request, res: Response) => {
   // when cheered bits are more than previous first
 
   let viewer = await viewerRepository.get({
-    name: viewerName,
-    broadcasterName,
+    id: viewerId,
+    broadcasterId,
   });
 
   // when viewer is new
   if (!viewer) {
     viewer = await viewerRepository.create({
-      broadcasterName,
+      id: viewerId,
       name: viewerName,
+      broadcasterId,
+      broadcasterName,
       firstCount: 0,
     });
   }
 
   // remove first from last viewer who got stolen the first
+  const stolenViewerId = broadcaster.currentFirstViewer;
   const stolenViewer = await viewerRepository.update(
     {
-      name: broadcaster.currentFirstViewer,
-      broadcasterName,
+      id: stolenViewerId,
+      broadcasterId,
     },
     {
       add: { firstCount: -1 },
@@ -273,8 +292,8 @@ api.post('/firsts/steal', async (req: Request, res: Response) => {
   // update first for the stealer
   viewer = await viewerRepository.update(
     {
-      name: viewerName,
-      broadcasterName,
+      id: viewer.id,
+      broadcasterId,
     },
     {
       add: { firstCount: 1 },
@@ -283,10 +302,10 @@ api.post('/firsts/steal', async (req: Request, res: Response) => {
 
   // update first for the broadcaster
   broadcaster = await broadcasterRepository.update(
-    { name: broadcaster.name },
+    { id: broadcaster.id },
     {
       set: {
-        currentFirstViewer: viewerName,
+        currentFirstViewer: viewer.id,
         currentFirstStreak: 1,
         firstIsRedeemed: true,
         bits: +bits,
@@ -295,7 +314,7 @@ api.post('/firsts/steal', async (req: Request, res: Response) => {
   );
 
   return res.status(200).json({
-    message: `Congrats!!! @${viewerName} stole the first from @${stolenViewer.name} with ${bits} bit(s). starting a new streak.`,
+    message: `Congrats!!! @${viewer.name} stole the first from @${stolenViewer.name} with ${bits} bit(s). starting a new streak.`,
   });
 });
 

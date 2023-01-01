@@ -1,10 +1,7 @@
 import { APIGatewayEvent, Context } from 'aws-lambda';
 import createAPI, { Request, Response } from 'lambda-api';
 
-import {
-  broadcasterRepository,
-  viewerRepository,
-} from '../repository/dynamo-repository';
+import { broadcasterRepository } from '../repository/dynamo-repository';
 
 import { corsMiddleware } from '../middlewares/cors';
 
@@ -13,7 +10,7 @@ const api = createAPI({ logger: true });
 api.use(corsMiddleware);
 
 api.post('/pay-to-win', async (req: Request, res: Response) => {
-  const { broadcaster: broadcasterName, viewer: viewerName } = req.body;
+  const { broadcasterId, broadcasterName, viewerName } = req.body;
 
   // when command is not used by the broadcaster
   if (broadcasterName !== viewerName) {
@@ -22,11 +19,12 @@ api.post('/pay-to-win', async (req: Request, res: Response) => {
     });
   }
 
-  let broadcaster = await broadcasterRepository.get({ name: broadcasterName });
+  let broadcaster = await broadcasterRepository.get({ id: broadcasterId });
 
   // when streamer is new
   if (!broadcaster) {
     broadcaster = await broadcasterRepository.create({
+      id: broadcasterId,
       name: broadcasterName,
       payToWinIsEnabled: true,
     });
@@ -35,7 +33,7 @@ api.post('/pay-to-win', async (req: Request, res: Response) => {
   // toggle pay to win status
   broadcaster = await broadcasterRepository.update(
     {
-      name: broadcasterName,
+      id: broadcasterId,
     },
     {
       set: {

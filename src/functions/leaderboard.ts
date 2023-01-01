@@ -7,25 +7,21 @@ const api = createAPI({});
 
 api.use(corsMiddleware);
 
-api.get('/leaderboards/:broadcaster', async (req: Request, res: Response) => {
-  const { broadcaster: broadcasterName } = req.params;
+api.get('/leaderboards/:broadcasterId', async (req: Request, res: Response) => {
+  const { broadcasterId } = req.params;
 
-  console.log({ broadcasterName });
-
-  if (!broadcasterName) {
+  if (!broadcasterId) {
     return res.status(401).json({ message: 'no broadcaster provided' });
   }
 
-  const viewers = await viewerRepository.find({ broadcasterName });
-
-  console.log({ viewers });
+  const viewers = await viewerRepository.find({ broadcasterId });
 
   const leaderboard = viewers
     .sort((viewerOne, viewerTwo) => viewerTwo.firstCount - viewerOne.firstCount)
     .filter((viewer) => viewer.firstCount)
     .reduce(
       (message, viewer, i) =>
-        `${message}\n #${i + 1}: @${viewer.name} with ${
+        `${message}${i === 0 ? '' : ' | '}#${i + 1}: @${viewer.name} with ${
           viewer.firstCount
         } first(s)`,
       '',

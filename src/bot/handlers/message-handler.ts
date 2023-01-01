@@ -30,8 +30,12 @@ export const messageHandler =
       return;
     }
 
-    const broadcaster = target.replace('#', '');
-    const { username } = tags;
+    const broadcasterName = target.replace('#', '');
+    const {
+      username: viewerName,
+      id: viewerId,
+      'room-id': broadcasterId,
+    } = tags;
 
     const sayMessage = async ({
       data: { message },
@@ -43,8 +47,10 @@ export const messageHandler =
 
     if (messageHasCommand(message, Command.First)) {
       const result = await apiClient.post<MessageResponse>('/firsts', {
-        broadcaster,
-        viewer: username,
+        broadcasterName,
+        broadcasterId,
+        viewerName,
+        viewerId,
       });
       sayMessage(result);
       return;
@@ -52,7 +58,7 @@ export const messageHandler =
 
     if (messageHasCommand(message, Command.LeaderBoard)) {
       const result = await apiClient.get<MessageResponse>(
-        `/leaderboards/${broadcaster}`,
+        `/leaderboards/${broadcasterId}`,
       );
       sayMessage(result);
       return;
@@ -60,8 +66,9 @@ export const messageHandler =
 
     if (messageHasCommand(message, Command.PayToWin)) {
       const result = await apiClient.post<MessageResponse>('/pay-to-win', {
-        broadcaster,
-        viewer: username,
+        broadcasterName,
+        broadcasterId,
+        viewerName,
       });
       sayMessage(result);
       return;
@@ -69,7 +76,7 @@ export const messageHandler =
 
     if (messageHasCommand(message, Command.PersonalBest)) {
       const result = await apiClient.get<MessageResponse>(
-        `/firsts/${broadcaster}/${username}`,
+        `/firsts/${broadcasterId}/${viewerId}`,
       );
       sayMessage(result);
       return;
@@ -77,7 +84,7 @@ export const messageHandler =
 
     if (messageHasCommand(message, Command.CurrentStreak)) {
       const result = await apiClient.get<MessageResponse>(
-        `/broadcasters/${broadcaster}/current-streak`,
+        `/broadcasters/${broadcasterId}/current-streak`,
       );
       sayMessage(result);
       return;
