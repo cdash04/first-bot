@@ -1,7 +1,7 @@
 service: first-bot
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs16.x
   region: ca-central-1
   stage: ${env:NODE_ENV}
   tracing:
