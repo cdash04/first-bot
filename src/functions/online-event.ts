@@ -12,16 +12,19 @@ api.use(challengeWebhookMiddleware);
 api.use(eventSubSecret);
 
 api.post('/events/online', async (req: Request, res: Response) => {
+  const broadcasterId: string = (
+    req.body?.event?.broadcaster_user_id as string
+  )?.toLowerCase();
   const broadcasterName: string = (
     req.body?.event?.broadcaster_user_name as string
   )?.toLowerCase();
 
-  if (!broadcasterName) {
+  if (!broadcasterId) {
     return res.status(400);
   }
 
   const broadcaster = await broadcasterRepository.get({
-    name: broadcasterName,
+    id: broadcasterId,
   });
 
   if (!broadcaster) {
@@ -31,8 +34,15 @@ api.post('/events/online', async (req: Request, res: Response) => {
   }
 
   await broadcasterRepository.update(
-    { name: broadcasterName },
-    { set: { online: true, firstIsRedeemed: false } },
+    { id: broadcasterId },
+    {
+      set: {
+        name: broadcasterName,
+        online: true,
+        firstIsRedeemed: false,
+        bits: 0,
+      },
+    },
   );
 
   return res

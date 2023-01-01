@@ -17,8 +17,12 @@ export const cheerHandler =
     userstate: ChatUserstate,
     message: string,
   ): Promise<void> => {
-
-    const { username, bits } = userstate;
+    const {
+      username: viewer,
+      id: viewerId,
+      'room-id': broadcasterId,
+      bits,
+    } = userstate;
     const broadcaster = channel.replace('#', '');
 
     const sayMessage = async ({
@@ -32,7 +36,9 @@ export const cheerHandler =
     if (messageHasCommand(message, Command.First)) {
       const result = await apiClient.post<MessageResponse>('/firsts/steal', {
         broadcaster,
-        viewer: username,
+        broadcasterId,
+        viewer,
+        viewerId,
         bits,
       });
       sayMessage(result);
