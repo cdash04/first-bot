@@ -33,7 +33,7 @@ export const messageHandler =
     const broadcasterName = target.replace('#', '');
     const {
       username: viewerName,
-      id: viewerId,
+      'user-id': viewerId,
       'room-id': broadcasterId,
     } = tags;
 
