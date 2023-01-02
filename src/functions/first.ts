@@ -126,8 +126,12 @@ api.post('/firsts', async (req: Request, res: Response) => {
     broadcaster.firstIsRedeemed &&
     broadcaster.currentFirstViewer !== viewer.id
   ) {
+    const currentViewer = await viewerRepository.get({
+      broadcasterId: broadcaster.id,
+      id: broadcaster.currentFirstViewer,
+    });
     return res.status(200).json({
-      message: `Sorry @${viewerName}, too late bro, @${broadcaster.currentFirstViewer} has already redeemed the first. Next time, git gud!`,
+      message: `Sorry @${viewerName}, too late bro, @${currentViewer.name} has already redeemed the first. Next time, git gud!`,
     });
   }
 

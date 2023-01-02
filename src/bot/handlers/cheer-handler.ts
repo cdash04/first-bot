@@ -18,12 +18,12 @@ export const cheerHandler =
     message: string,
   ): Promise<void> => {
     const {
-      username: viewer,
-      id: viewerId,
+      username: viewerName,
+      'user-id': viewerId,
       'room-id': broadcasterId,
       bits,
     } = userstate;
-    const broadcaster = channel.replace('#', '');
+    const broadcasterName = channel.replace('#', '');
 
     const sayMessage = async ({
       data: { message },
@@ -35,9 +35,9 @@ export const cheerHandler =
 
     if (messageHasCommand(message, Command.First)) {
       const result = await apiClient.post<MessageResponse>('/firsts/steal', {
-        broadcaster,
+        broadcasterName,
         broadcasterId,
-        viewer,
+        viewerName,
         viewerId,
         bits,
       });
