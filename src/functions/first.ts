@@ -66,7 +66,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
     });
   }
 
-  // when viewer is new but not broadcaster and first is not redeemed
+  // when viewer is new but broadcaster is not new and first is not redeemed
   if (!viewer && !broadcaster.firstIsRedeemed) {
     [broadcaster, viewer] = await Promise.all([
       // update current streak viewer and current streak count
@@ -75,7 +75,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
         {
           set: {
             broadcasterName,
-            currentFirstViewer: viewerName,
+            currentFirstViewer: viewerId,
             currentFirstStreak: 1,
             firstIsRedeemed: true,
           },
@@ -106,8 +106,13 @@ api.post('/firsts', async (req: Request, res: Response) => {
       firstCount: 0,
     });
 
+    const currentViewer = await viewerRepository.get({
+      broadcasterId: broadcaster.id,
+      id: broadcaster.currentFirstViewer,
+    });
+
     return res.status(200).json({
-      message: `Sorry @${viewer.name}, too late bro, @${broadcaster.currentFirstViewer} has already redeemed the first. Next time, git gud!`,
+      message: `Sorry @${viewer.name}, too late bro, @${currentViewer.name} has already redeemed the first. Next time, git gud!`,
     });
   }
 
