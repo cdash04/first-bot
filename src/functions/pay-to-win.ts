@@ -12,14 +12,16 @@ api.use(corsMiddleware);
 api.post('/pay-to-win', async (req: Request, res: Response) => {
   const { broadcasterId, broadcasterName, viewerName } = req.body;
 
+  let broadcaster = await broadcasterRepository.get({ id: broadcasterId });
+
   // when command is not used by the broadcaster
   if (broadcasterName !== viewerName) {
     return res.status(200).json({
-      message: `@${viewerName} only the streamer can perform this command`,
+      message: `@${viewerName} pay to win is currently ${
+        broadcaster.payToWinIsEnabled ? 'on' : 'off'
+      }.`,
     });
   }
-
-  let broadcaster = await broadcasterRepository.get({ id: broadcasterId });
 
   // when streamer is new
   if (!broadcaster) {
