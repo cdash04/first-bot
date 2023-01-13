@@ -8,6 +8,7 @@ on:
       - 'src/repository/**'
     branches:
       - main
+  workflow_dispatch:
 
 env:
   CI: true
