@@ -60,7 +60,7 @@ jobs:
           service: app-runner-git-deploy-service
           image: ${{ steps.build-image.outputs.image }}
           access-role-arn: ${{ secrets.ROLE_ARN }}
-          region: ${{ secrets.AWS_REGION }}
+          region: us-east-1
           wait-for-service-stability-seconds: 1200
           copy-env-vars: 
             BOT_NAME
