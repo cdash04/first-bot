@@ -1,0 +1,72 @@
+name: Push-bot-to-ECR
+
+# Trigger deployment only on push to master branch
+on:
+  push:
+    paths:
+      - 'src/bot/**'
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to EC2 on master branch push
+    runs-on: ubuntu-latest
+    env:
+      BOT_NAME: ${{secrets.BOT_NAME}}
+      TWITCH_CLIENT_ID: ${{secrets.TWITCH_CLIENT_ID}}
+      TWITCH_CLIENT_SECRET: ${{secrets.TWITCH_CLIENT_SECRET}}
+      TWITCH_TMI_OAUTH: ${{secrets.TWITCH_TMI_OAUTH}}
+      TWITCH_EVENT_SUB_LISTENER_SECRET: ${{secrets.TWITCH_EVENT_SUB_LISTENER_SECRET}}
+      APP_API_URL: ${{secrets.APP_API_URL}}
+      NODE_ENV: dev
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Checkout the files
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: first-bot
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" 
+
+      - name: Deploy to App Runner Image
+        id: deploy-apprunner
+        uses: awslabs/amazon-app-runner-deploy@main
+        with:
+          service: app-runner-git-deploy-service
+          image: ${{ steps.build-image.outputs.image }}
+          access-role-arn: ${{ secrets.ROLE_ARN }}
+          region: ${{ secrets.AWS_REGION }}
+          wait-for-service-stability-seconds: 1200
+          copy-env-vars: 
+            BOT_NAME
+            TWITCH_CLIENT_ID
+            TWITCH_CLIENT_SECRET
+            TWITCH_TMI_OAUTH
+            TWITCH_EVENT_SUB_LISTENER_SECRET
+            APP_API_URL
+            NODE_ENV
