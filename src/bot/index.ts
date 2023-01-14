@@ -59,9 +59,6 @@ chatClient
 
 chatClient.connect();
 
-healthCheckServer.on('error', (err) => {
-  throw err;
-});
 healthCheckServer.listen(8000, () => {
-  console.log('server bound');
+  console.log('Server running on port 8000');
 });

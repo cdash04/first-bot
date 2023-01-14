@@ -1,11 +1,6 @@
-import { createServer } from 'net';
+import { createServer } from 'http';
 
-export const healthCheckServer = createServer((socket) => {
-  // 'connection' listener
-  console.log('client connected');
-  socket.on('end', () => {
-    console.log('client disconnected');
-  });
-  socket.write('Healthcheck: OK\n');
-  socket.pipe(socket);
+export const healthCheckServer = createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Healthcheck: OK');
 });
