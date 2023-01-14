@@ -53,3 +53,21 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" 
+
+      - name: Deploy to App Runner Image
+        id: deploy-apprunner
+        uses: awslabs/amazon-app-runner-deploy@main
+        with:
+          service: first-bot-chat-listener
+          image: ${{ steps.build-image.outputs.image }}
+          access-role-arn: ${{ secrets.ROLE_ARN }}
+          region: us-east-1
+          wait-for-service-stability-seconds: 1200
+          copy-env-vars: 
+            BOT_NAME
+            TWITCH_CLIENT_ID
+            TWITCH_CLIENT_SECRET
+            TWITCH_TMI_OAUTH
+            TWITCH_EVENT_SUB_LISTENER_SECRET
+            APP_API_URL
+            NODE_ENV
