@@ -9,6 +9,7 @@ import {
   createOfflineSubscriptionService,
   createOnlineSubscriptionService,
 } from './services';
+import { healthCheckServer } from './healthcheck';
 
 program.option(
   '-c, --channels <string>',
@@ -57,3 +58,10 @@ chatClient
   .on('cheer', cheerHandler(chatClient));
 
 chatClient.connect();
+
+healthCheckServer.on('error', (err) => {
+  throw err;
+});
+healthCheckServer.listen(8000, () => {
+  console.log('server bound');
+});

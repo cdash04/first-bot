@@ -13,4 +13,7 @@ COPY . .
 RUN yarn build
 
 EXPOSE 80
+EXPOSE 443
+EXPOSE 8000
+
 CMD [ "yarn", "node", "dist/bot", "-c", "todjrekt,jbezzo,josnib,knifebyt,cdash01,fussybalel,robzen42,patkilo,funkadelicfungi,wolajo,will_frad,jim6452,bb_rose,redheadsista,steve_boots" ]
