@@ -14,7 +14,7 @@ node_modules
 Thumbs.db
 
 # Ignore built ts files
-dist/**/*
+dist
 
 # Local DynamoDB
 .dynamodb
@@ -30,3 +30,6 @@ layer
 
 #yarn
 yarn-error.log
+
+#aws cdk
+cdk.out

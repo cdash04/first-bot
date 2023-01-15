@@ -1,0 +1,1588 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "ServerlessDeploymentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            { "ServerSideEncryptionByDefault": { "SSEAlgorithm": "AES256" } }
+          ]
+        }
+      }
+    },
+    "ServerlessDeploymentBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": { "Ref": "ServerlessDeploymentBucket" },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      { "Ref": "AWS::Partition" },
+                      ":s3:::",
+                      { "Ref": "ServerlessDeploymentBucket" },
+                      "/*"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      { "Ref": "AWS::Partition" },
+                      ":s3:::",
+                      { "Ref": "ServerlessDeploymentBucket" }
+                    ]
+                  ]
+                }
+              ],
+              "Condition": { "Bool": { "aws:SecureTransport": false } }
+            }
+          ]
+        }
+      }
+    },
+    "FirstLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": { "LogGroupName": "/aws/lambda/first-bot-dev-first" }
+    },
+    "BroadcastersLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": { "LogGroupName": "/aws/lambda/first-bot-dev-broadcasters" }
+    },
+    "OnlineDasheventLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": { "LogGroupName": "/aws/lambda/first-bot-dev-online-event" }
+    },
+    "OfflineDasheventLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/first-bot-dev-offline-event"
+      }
+    },
+    "LeaderboardLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": { "LogGroupName": "/aws/lambda/first-bot-dev-leaderboard" }
+    },
+    "PayDashtoDashwinLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": { "LogGroupName": "/aws/lambda/first-bot-dev-pay-to-win" }
+    },
+    "IamRoleLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": { "Service": ["lambda.amazonaws.com"] },
+              "Action": ["sts:AssumeRole"]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": { "Fn::Join": ["-", ["first-bot", "dev", "lambda"]] },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": ["logs:CreateLogStream", "logs:CreateLogGroup"],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/first-bot-dev*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": ["logs:PutLogEvents"],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/first-bot-dev*:*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue",
+                    "s3:PutObject",
+                    "s3:GetObject",
+                    "dynamodb:DescribeTable",
+                    "dynamodb:Query",
+                    "dynamodb:Scan",
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:DeleteItem",
+                    "dynamodb:ListTables",
+                    "dynamodb:CreateTable",
+                    "lambda:PublishLayerVersion",
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": ["arn:aws:s3:::layerBucket", "*"]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "xray:PutTraceSegments",
+                    "xray:PutTelemetryRecords"
+                  ],
+                  "Resource": ["*"]
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            ["first-bot", "dev", { "Ref": "AWS::Region" }, "lambdaRole"]
+          ]
+        }
+      }
+    },
+    "NodeModulesLambdaLayer": {
+      "Type": "AWS::Lambda::LayerVersion",
+      "Properties": {
+        "Content": {
+          "S3Bucket": { "Ref": "ServerlessDeploymentBucket" },
+          "S3Key": "serverless/first-bot/dev/1673147259162-2023-01-08T03:07:39.162Z/nodeModules.zip"
+        },
+        "LayerName": "nodeModules",
+        "CompatibleRuntimes": ["nodejs14.x"]
+      }
+    },
+    "FirstLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": { "Ref": "ServerlessDeploymentBucket" },
+          "S3Key": "serverless/first-bot/dev/1673147259162-2023-01-08T03:07:39.162Z/first-bot.zip"
+        },
+        "Handler": "dist/functions/first.handler",
+        "Runtime": "nodejs16.x",
+        "FunctionName": "first-bot-dev-first",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "TracingConfig": { "Mode": "Active" },
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": "dev",
+            "TWITCH_EVENT_SUB_LISTENER_SECRET": "23urh13i4nr43iry8745y34895y34uht34uth835geiur4h3iu5ht",
+            "TABLE_NAME": "dev-Table"
+          }
+        },
+        "Role": { "Fn::GetAtt": ["IamRoleLambdaExecution", "Arn"] },
+        "Layers": [{ "Ref": "NodeModulesLambdaLayer" }]
+      },
+      "DependsOn": ["FirstLogGroup"]
+    },
+    "BroadcastersLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": { "Ref": "ServerlessDeploymentBucket" },
+          "S3Key": "serverless/first-bot/dev/1673147259162-2023-01-08T03:07:39.162Z/first-bot.zip"
+        },
+        "Handler": "dist/functions/broadcasters.handler",
+        "Runtime": "nodejs16.x",
+        "FunctionName": "first-bot-dev-broadcasters",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "TracingConfig": { "Mode": "Active" },
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": "dev",
+            "TWITCH_EVENT_SUB_LISTENER_SECRET": "23urh13i4nr43iry8745y34895y34uht34uth835geiur4h3iu5ht",
+            "TABLE_NAME": "dev-Table"
+          }
+        },
+        "Role": { "Fn::GetAtt": ["IamRoleLambdaExecution", "Arn"] },
+        "Layers": [{ "Ref": "NodeModulesLambdaLayer" }]
+      },
+      "DependsOn": ["BroadcastersLogGroup"]
+    },
+    "OnlineDasheventLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": { "Ref": "ServerlessDeploymentBucket" },
+          "S3Key": "serverless/first-bot/dev/1673147259162-2023-01-08T03:07:39.162Z/first-bot.zip"
+        },
+        "Handler": "dist/functions/online-event.handler",
+        "Runtime": "nodejs16.x",
+        "FunctionName": "first-bot-dev-online-event",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "TracingConfig": { "Mode": "Active" },
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": "dev",
+            "TWITCH_EVENT_SUB_LISTENER_SECRET": "23urh13i4nr43iry8745y34895y34uht34uth835geiur4h3iu5ht",
+            "TABLE_NAME": "dev-Table"
+          }
+        },
+        "Role": { "Fn::GetAtt": ["IamRoleLambdaExecution", "Arn"] },
+        "Layers": [{ "Ref": "NodeModulesLambdaLayer" }]
+      },
+      "DependsOn": ["OnlineDasheventLogGroup"]
+    },
+    "OfflineDasheventLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": { "Ref": "ServerlessDeploymentBucket" },
+          "S3Key": "serverless/first-bot/dev/1673147259162-2023-01-08T03:07:39.162Z/first-bot.zip"
+        },
+        "Handler": "dist/functions/offline-event.handler",
+        "Runtime": "nodejs16.x",
+        "FunctionName": "first-bot-dev-offline-event",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "TracingConfig": { "Mode": "Active" },
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": "dev",
+            "TWITCH_EVENT_SUB_LISTENER_SECRET": "23urh13i4nr43iry8745y34895y34uht34uth835geiur4h3iu5ht",
+            "TABLE_NAME": "dev-Table"
+          }
+        },
+        "Role": { "Fn::GetAtt": ["IamRoleLambdaExecution", "Arn"] },
+        "Layers": [{ "Ref": "NodeModulesLambdaLayer" }]
+      },
+      "DependsOn": ["OfflineDasheventLogGroup"]
+    },
+    "LeaderboardLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": { "Ref": "ServerlessDeploymentBucket" },
+          "S3Key": "serverless/first-bot/dev/1673147259162-2023-01-08T03:07:39.162Z/first-bot.zip"
+        },
+        "Handler": "dist/functions/leaderboard.handler",
+        "Runtime": "nodejs16.x",
+        "FunctionName": "first-bot-dev-leaderboard",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "TracingConfig": { "Mode": "Active" },
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": "dev",
+            "TWITCH_EVENT_SUB_LISTENER_SECRET": "23urh13i4nr43iry8745y34895y34uht34uth835geiur4h3iu5ht",
+            "TABLE_NAME": "dev-Table"
+          }
+        },
+        "Role": { "Fn::GetAtt": ["IamRoleLambdaExecution", "Arn"] },
+        "Layers": [{ "Ref": "NodeModulesLambdaLayer" }]
+      },
+      "DependsOn": ["LeaderboardLogGroup"]
+    },
+    "PayDashtoDashwinLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": { "Ref": "ServerlessDeploymentBucket" },
+          "S3Key": "serverless/first-bot/dev/1673147259162-2023-01-08T03:07:39.162Z/first-bot.zip"
+        },
+        "Handler": "dist/functions/pay-to-win.handler",
+        "Runtime": "nodejs16.x",
+        "FunctionName": "first-bot-dev-pay-to-win",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "TracingConfig": { "Mode": "Active" },
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": "dev",
+            "TWITCH_EVENT_SUB_LISTENER_SECRET": "23urh13i4nr43iry8745y34895y34uht34uth835geiur4h3iu5ht",
+            "TABLE_NAME": "dev-Table"
+          }
+        },
+        "Role": { "Fn::GetAtt": ["IamRoleLambdaExecution", "Arn"] },
+        "Layers": [{ "Ref": "NodeModulesLambdaLayer" }]
+      },
+      "DependsOn": ["PayDashtoDashwinLogGroup"]
+    },
+    "FirstLambdaVersionFbvuPSnPg5hgk1iqHljjojqzOygQal8mlnTyLEsnnY": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": { "Ref": "FirstLambdaFunction" },
+        "CodeSha256": "T3xBdcbB/lJDtV+bXjTKkiP5c8gCLiqGZxolmmQHBJY="
+      }
+    },
+    "BroadcastersLambdaVersionxK6ZAFVEqDwN6sGMP0mavcJ5Oowyklw98shkBgjIo": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": { "Ref": "BroadcastersLambdaFunction" },
+        "CodeSha256": "T3xBdcbB/lJDtV+bXjTKkiP5c8gCLiqGZxolmmQHBJY="
+      }
+    },
+    "OnlineDasheventLambdaVersionLN1dzTeiFhOa3PLEqrltCKbzewKoBiDuu4kglArjhLs": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": { "Ref": "OnlineDasheventLambdaFunction" },
+        "CodeSha256": "T3xBdcbB/lJDtV+bXjTKkiP5c8gCLiqGZxolmmQHBJY="
+      }
+    },
+    "OfflineDasheventLambdaVersion8ceNQYACGy8qrsHm1dgvV2pNtjs1gcc54Gh3Er9n9Q": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": { "Ref": "OfflineDasheventLambdaFunction" },
+        "CodeSha256": "T3xBdcbB/lJDtV+bXjTKkiP5c8gCLiqGZxolmmQHBJY="
+      }
+    },
+    "LeaderboardLambdaVersionmq1beHCZ0oObfH6kbBfWk0uTsK9FSDXXY7QOTXX2K2U": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": { "Ref": "LeaderboardLambdaFunction" },
+        "CodeSha256": "T3xBdcbB/lJDtV+bXjTKkiP5c8gCLiqGZxolmmQHBJY="
+      }
+    },
+    "PayDashtoDashwinLambdaVersionIYppd4pU8Kx8sSoSWrul8a0KyA1mVvvPpufL3OgnAA": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": { "Ref": "PayDashtoDashwinLambdaFunction" },
+        "CodeSha256": "T3xBdcbB/lJDtV+bXjTKkiP5c8gCLiqGZxolmmQHBJY="
+      }
+    },
+    "ApiGatewayRestApi": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Name": "dev-first-bot",
+        "EndpointConfiguration": { "Types": ["EDGE"] }
+      }
+    },
+    "ApiGatewayResourceFirsts": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Fn::GetAtt": ["ApiGatewayRestApi", "RootResourceId"] },
+        "PathPart": "firsts",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayResourceFirstsProxyVar": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Ref": "ApiGatewayResourceFirsts" },
+        "PathPart": "{proxy+}",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayResourceBroadcasters": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Fn::GetAtt": ["ApiGatewayRestApi", "RootResourceId"] },
+        "PathPart": "broadcasters",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayResourceBroadcastersProxyVar": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Ref": "ApiGatewayResourceBroadcasters" },
+        "PathPart": "{proxy+}",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayResourceEvents": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Fn::GetAtt": ["ApiGatewayRestApi", "RootResourceId"] },
+        "PathPart": "events",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayResourceEventsOnline": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Ref": "ApiGatewayResourceEvents" },
+        "PathPart": "online",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayResourceEventsOnlineProxyVar": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Ref": "ApiGatewayResourceEventsOnline" },
+        "PathPart": "{proxy+}",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayResourceEventsOffline": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Ref": "ApiGatewayResourceEvents" },
+        "PathPart": "offline",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayResourceEventsOfflineProxyVar": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Ref": "ApiGatewayResourceEventsOffline" },
+        "PathPart": "{proxy+}",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayResourceLeaderboards": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Fn::GetAtt": ["ApiGatewayRestApi", "RootResourceId"] },
+        "PathPart": "leaderboards",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayResourceLeaderboardsProxyVar": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Ref": "ApiGatewayResourceLeaderboards" },
+        "PathPart": "{proxy+}",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayResourcePayDashtoDashwin": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Fn::GetAtt": ["ApiGatewayRestApi", "RootResourceId"] },
+        "PathPart": "pay-to-win",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayResourcePayDashtoDashwinProxyVar": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": { "Ref": "ApiGatewayResourcePayDashtoDashwin" },
+        "PathPart": "{proxy+}",
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodFirstsOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": { "application/json": "{statusCode:200}" },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": { "application/json": "" }
+            }
+          ]
+        },
+        "ResourceId": { "Ref": "ApiGatewayResourceFirsts" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodFirstsProxyVarOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": { "application/json": "{statusCode:200}" },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": { "application/json": "" }
+            }
+          ]
+        },
+        "ResourceId": { "Ref": "ApiGatewayResourceFirstsProxyVar" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodBroadcastersOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": { "application/json": "{statusCode:200}" },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": { "application/json": "" }
+            }
+          ]
+        },
+        "ResourceId": { "Ref": "ApiGatewayResourceBroadcasters" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodBroadcastersProxyVarOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": { "application/json": "{statusCode:200}" },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": { "application/json": "" }
+            }
+          ]
+        },
+        "ResourceId": { "Ref": "ApiGatewayResourceBroadcastersProxyVar" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodEventsOnlineOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": { "application/json": "{statusCode:200}" },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": { "application/json": "" }
+            }
+          ]
+        },
+        "ResourceId": { "Ref": "ApiGatewayResourceEventsOnline" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodEventsOnlineProxyVarOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": { "application/json": "{statusCode:200}" },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": { "application/json": "" }
+            }
+          ]
+        },
+        "ResourceId": { "Ref": "ApiGatewayResourceEventsOnlineProxyVar" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodEventsOfflineOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": { "application/json": "{statusCode:200}" },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": { "application/json": "" }
+            }
+          ]
+        },
+        "ResourceId": { "Ref": "ApiGatewayResourceEventsOffline" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodEventsOfflineProxyVarOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": { "application/json": "{statusCode:200}" },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": { "application/json": "" }
+            }
+          ]
+        },
+        "ResourceId": { "Ref": "ApiGatewayResourceEventsOfflineProxyVar" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodLeaderboardsOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": { "application/json": "{statusCode:200}" },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": { "application/json": "" }
+            }
+          ]
+        },
+        "ResourceId": { "Ref": "ApiGatewayResourceLeaderboards" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodLeaderboardsProxyVarOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": { "application/json": "{statusCode:200}" },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": { "application/json": "" }
+            }
+          ]
+        },
+        "ResourceId": { "Ref": "ApiGatewayResourceLeaderboardsProxyVar" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodPayDashtoDashwinOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": { "application/json": "{statusCode:200}" },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": { "application/json": "" }
+            }
+          ]
+        },
+        "ResourceId": { "Ref": "ApiGatewayResourcePayDashtoDashwin" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodPayDashtoDashwinProxyVarOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": { "application/json": "{statusCode:200}" },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": { "application/json": "" }
+            }
+          ]
+        },
+        "ResourceId": { "Ref": "ApiGatewayResourcePayDashtoDashwinProxyVar" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" }
+      }
+    },
+    "ApiGatewayMethodFirstsAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": { "Ref": "ApiGatewayResourceFirsts" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { "Ref": "AWS::Partition" },
+                ":apigateway:",
+                { "Ref": "AWS::Region" },
+                ":lambda:path/2015-03-31/functions/",
+                { "Fn::GetAtt": ["FirstLambdaFunction", "Arn"] },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": ["FirstLambdaPermissionApiGateway"]
+    },
+    "ApiGatewayMethodFirstsProxyVarAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": { "Ref": "ApiGatewayResourceFirstsProxyVar" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { "Ref": "AWS::Partition" },
+                ":apigateway:",
+                { "Ref": "AWS::Region" },
+                ":lambda:path/2015-03-31/functions/",
+                { "Fn::GetAtt": ["FirstLambdaFunction", "Arn"] },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": ["FirstLambdaPermissionApiGateway"]
+    },
+    "ApiGatewayMethodBroadcastersAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": { "Ref": "ApiGatewayResourceBroadcasters" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { "Ref": "AWS::Partition" },
+                ":apigateway:",
+                { "Ref": "AWS::Region" },
+                ":lambda:path/2015-03-31/functions/",
+                { "Fn::GetAtt": ["BroadcastersLambdaFunction", "Arn"] },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": ["BroadcastersLambdaPermissionApiGateway"]
+    },
+    "ApiGatewayMethodBroadcastersProxyVarAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": { "Ref": "ApiGatewayResourceBroadcastersProxyVar" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { "Ref": "AWS::Partition" },
+                ":apigateway:",
+                { "Ref": "AWS::Region" },
+                ":lambda:path/2015-03-31/functions/",
+                { "Fn::GetAtt": ["BroadcastersLambdaFunction", "Arn"] },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": ["BroadcastersLambdaPermissionApiGateway"]
+    },
+    "ApiGatewayMethodEventsOnlineAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": { "Ref": "ApiGatewayResourceEventsOnline" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { "Ref": "AWS::Partition" },
+                ":apigateway:",
+                { "Ref": "AWS::Region" },
+                ":lambda:path/2015-03-31/functions/",
+                { "Fn::GetAtt": ["OnlineDasheventLambdaFunction", "Arn"] },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": ["OnlineDasheventLambdaPermissionApiGateway"]
+    },
+    "ApiGatewayMethodEventsOnlineProxyVarAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": { "Ref": "ApiGatewayResourceEventsOnlineProxyVar" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { "Ref": "AWS::Partition" },
+                ":apigateway:",
+                { "Ref": "AWS::Region" },
+                ":lambda:path/2015-03-31/functions/",
+                { "Fn::GetAtt": ["OnlineDasheventLambdaFunction", "Arn"] },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": ["OnlineDasheventLambdaPermissionApiGateway"]
+    },
+    "ApiGatewayMethodEventsOfflineAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": { "Ref": "ApiGatewayResourceEventsOffline" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { "Ref": "AWS::Partition" },
+                ":apigateway:",
+                { "Ref": "AWS::Region" },
+                ":lambda:path/2015-03-31/functions/",
+                { "Fn::GetAtt": ["OfflineDasheventLambdaFunction", "Arn"] },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": ["OfflineDasheventLambdaPermissionApiGateway"]
+    },
+    "ApiGatewayMethodEventsOfflineProxyVarAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": { "Ref": "ApiGatewayResourceEventsOfflineProxyVar" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { "Ref": "AWS::Partition" },
+                ":apigateway:",
+                { "Ref": "AWS::Region" },
+                ":lambda:path/2015-03-31/functions/",
+                { "Fn::GetAtt": ["OfflineDasheventLambdaFunction", "Arn"] },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": ["OfflineDasheventLambdaPermissionApiGateway"]
+    },
+    "ApiGatewayMethodLeaderboardsAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": { "Ref": "ApiGatewayResourceLeaderboards" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { "Ref": "AWS::Partition" },
+                ":apigateway:",
+                { "Ref": "AWS::Region" },
+                ":lambda:path/2015-03-31/functions/",
+                { "Fn::GetAtt": ["LeaderboardLambdaFunction", "Arn"] },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": ["LeaderboardLambdaPermissionApiGateway"]
+    },
+    "ApiGatewayMethodLeaderboardsProxyVarAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": { "Ref": "ApiGatewayResourceLeaderboardsProxyVar" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { "Ref": "AWS::Partition" },
+                ":apigateway:",
+                { "Ref": "AWS::Region" },
+                ":lambda:path/2015-03-31/functions/",
+                { "Fn::GetAtt": ["LeaderboardLambdaFunction", "Arn"] },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": ["LeaderboardLambdaPermissionApiGateway"]
+    },
+    "ApiGatewayMethodPayDashtoDashwinAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": { "Ref": "ApiGatewayResourcePayDashtoDashwin" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { "Ref": "AWS::Partition" },
+                ":apigateway:",
+                { "Ref": "AWS::Region" },
+                ":lambda:path/2015-03-31/functions/",
+                { "Fn::GetAtt": ["PayDashtoDashwinLambdaFunction", "Arn"] },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": ["PayDashtoDashwinLambdaPermissionApiGateway"]
+    },
+    "ApiGatewayMethodPayDashtoDashwinProxyVarAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": { "Ref": "ApiGatewayResourcePayDashtoDashwinProxyVar" },
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                { "Ref": "AWS::Partition" },
+                ":apigateway:",
+                { "Ref": "AWS::Region" },
+                ":lambda:path/2015-03-31/functions/",
+                { "Fn::GetAtt": ["PayDashtoDashwinLambdaFunction", "Arn"] },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": ["PayDashtoDashwinLambdaPermissionApiGateway"]
+    },
+    "ApiGatewayDeployment1673147236443": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "RestApiId": { "Ref": "ApiGatewayRestApi" },
+        "StageName": "dev"
+      },
+      "DependsOn": [
+        "ApiGatewayMethodFirstsOptions",
+        "ApiGatewayMethodFirstsProxyVarOptions",
+        "ApiGatewayMethodBroadcastersOptions",
+        "ApiGatewayMethodBroadcastersProxyVarOptions",
+        "ApiGatewayMethodEventsOnlineOptions",
+        "ApiGatewayMethodEventsOnlineProxyVarOptions",
+        "ApiGatewayMethodEventsOfflineOptions",
+        "ApiGatewayMethodEventsOfflineProxyVarOptions",
+        "ApiGatewayMethodLeaderboardsOptions",
+        "ApiGatewayMethodLeaderboardsProxyVarOptions",
+        "ApiGatewayMethodPayDashtoDashwinOptions",
+        "ApiGatewayMethodPayDashtoDashwinProxyVarOptions",
+        "ApiGatewayMethodFirstsAny",
+        "ApiGatewayMethodFirstsProxyVarAny",
+        "ApiGatewayMethodBroadcastersAny",
+        "ApiGatewayMethodBroadcastersProxyVarAny",
+        "ApiGatewayMethodEventsOnlineAny",
+        "ApiGatewayMethodEventsOnlineProxyVarAny",
+        "ApiGatewayMethodEventsOfflineAny",
+        "ApiGatewayMethodEventsOfflineProxyVarAny",
+        "ApiGatewayMethodLeaderboardsAny",
+        "ApiGatewayMethodLeaderboardsProxyVarAny",
+        "ApiGatewayMethodPayDashtoDashwinAny",
+        "ApiGatewayMethodPayDashtoDashwinProxyVarAny"
+      ]
+    },
+    "FirstLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": { "Fn::GetAtt": ["FirstLambdaFunction", "Arn"] },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              { "Ref": "AWS::Partition" },
+              ":execute-api:",
+              { "Ref": "AWS::Region" },
+              ":",
+              { "Ref": "AWS::AccountId" },
+              ":",
+              { "Ref": "ApiGatewayRestApi" },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
+    "BroadcastersLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": { "Fn::GetAtt": ["BroadcastersLambdaFunction", "Arn"] },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              { "Ref": "AWS::Partition" },
+              ":execute-api:",
+              { "Ref": "AWS::Region" },
+              ":",
+              { "Ref": "AWS::AccountId" },
+              ":",
+              { "Ref": "ApiGatewayRestApi" },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
+    "OnlineDasheventLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": ["OnlineDasheventLambdaFunction", "Arn"]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              { "Ref": "AWS::Partition" },
+              ":execute-api:",
+              { "Ref": "AWS::Region" },
+              ":",
+              { "Ref": "AWS::AccountId" },
+              ":",
+              { "Ref": "ApiGatewayRestApi" },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
+    "OfflineDasheventLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": ["OfflineDasheventLambdaFunction", "Arn"]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              { "Ref": "AWS::Partition" },
+              ":execute-api:",
+              { "Ref": "AWS::Region" },
+              ":",
+              { "Ref": "AWS::AccountId" },
+              ":",
+              { "Ref": "ApiGatewayRestApi" },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
+    "LeaderboardLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": { "Fn::GetAtt": ["LeaderboardLambdaFunction", "Arn"] },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              { "Ref": "AWS::Partition" },
+              ":execute-api:",
+              { "Ref": "AWS::Region" },
+              ":",
+              { "Ref": "AWS::AccountId" },
+              ":",
+              { "Ref": "ApiGatewayRestApi" },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
+    "PayDashtoDashwinLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": ["PayDashtoDashwinLambdaFunction", "Arn"]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              { "Ref": "AWS::Partition" },
+              ":execute-api:",
+              { "Ref": "AWS::Region" },
+              ":",
+              { "Ref": "AWS::AccountId" },
+              ":",
+              { "Ref": "ApiGatewayRestApi" },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
+    "Table": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "dev-Table",
+        "AttributeDefinitions": [
+          { "AttributeName": "pk", "AttributeType": "S" },
+          { "AttributeName": "sk", "AttributeType": "S" }
+        ],
+        "KeySchema": [
+          { "AttributeName": "pk", "KeyType": "HASH" },
+          { "AttributeName": "sk", "KeyType": "RANGE" }
+        ],
+        "BillingMode": "PAY_PER_REQUEST"
+      }
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": { "Ref": "ServerlessDeploymentBucket" },
+      "Export": { "Name": "sls-first-bot-dev-ServerlessDeploymentBucketName" }
+    },
+    "NodeModulesLambdaLayerQualifiedArn": {
+      "Description": "Current Lambda layer version",
+      "Value": { "Ref": "NodeModulesLambdaLayer" },
+      "Export": {
+        "Name": "sls-first-bot-dev-NodeModulesLambdaLayerQualifiedArn"
+      }
+    },
+    "NodeModulesLambdaLayerHash": {
+      "Description": "Current Lambda layer hash",
+      "Value": "8f4f33dc3520212f0fdb7b700f0186f1d42e7a1d",
+      "Export": { "Name": "sls-first-bot-dev-NodeModulesLambdaLayerHash" }
+    },
+    "NodeModulesLambdaLayerS3Key": {
+      "Description": "Current Lambda layer S3Key",
+      "Value": "serverless/first-bot/dev/1673147259162-2023-01-08T03:07:39.162Z/nodeModules.zip",
+      "Export": { "Name": "sls-first-bot-dev-NodeModulesLambdaLayerS3Key" }
+    },
+    "FirstLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "FirstLambdaVersionFbvuPSnPg5hgk1iqHljjojqzOygQal8mlnTyLEsnnY"
+      },
+      "Export": { "Name": "sls-first-bot-dev-FirstLambdaFunctionQualifiedArn" }
+    },
+    "BroadcastersLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "BroadcastersLambdaVersionxK6ZAFVEqDwN6sGMP0mavcJ5Oowyklw98shkBgjIo"
+      },
+      "Export": {
+        "Name": "sls-first-bot-dev-BroadcastersLambdaFunctionQualifiedArn"
+      }
+    },
+    "OnlineDasheventLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "OnlineDasheventLambdaVersionLN1dzTeiFhOa3PLEqrltCKbzewKoBiDuu4kglArjhLs"
+      },
+      "Export": {
+        "Name": "sls-first-bot-dev-OnlineDasheventLambdaFunctionQualifiedArn"
+      }
+    },
+    "OfflineDasheventLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "OfflineDasheventLambdaVersion8ceNQYACGy8qrsHm1dgvV2pNtjs1gcc54Gh3Er9n9Q"
+      },
+      "Export": {
+        "Name": "sls-first-bot-dev-OfflineDasheventLambdaFunctionQualifiedArn"
+      }
+    },
+    "LeaderboardLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "LeaderboardLambdaVersionmq1beHCZ0oObfH6kbBfWk0uTsK9FSDXXY7QOTXX2K2U"
+      },
+      "Export": {
+        "Name": "sls-first-bot-dev-LeaderboardLambdaFunctionQualifiedArn"
+      }
+    },
+    "PayDashtoDashwinLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "PayDashtoDashwinLambdaVersionIYppd4pU8Kx8sSoSWrul8a0KyA1mVvvPpufL3OgnAA"
+      },
+      "Export": {
+        "Name": "sls-first-bot-dev-PayDashtoDashwinLambdaFunctionQualifiedArn"
+      }
+    },
+    "ServiceEndpoint": {
+      "Description": "URL of the service endpoint",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            { "Ref": "ApiGatewayRestApi" },
+            ".execute-api.",
+            { "Ref": "AWS::Region" },
+            ".",
+            { "Ref": "AWS::URLSuffix" },
+            "/dev"
+          ]
+        ]
+      },
+      "Export": { "Name": "sls-first-bot-dev-ServiceEndpoint" }
+    }
+  }
+}
