@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import {
   Code,
   Function,
@@ -6,6 +7,7 @@ import {
   LayerVersion,
   Runtime,
 } from 'aws-cdk-lib/aws-lambda';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 
 export class BaseLambda extends Construct {
@@ -15,23 +17,26 @@ export class BaseLambda extends Construct {
 
   constructor(
     name: string,
-    handler: string,
+    file: string,
     scope: Construct,
     id: string,
-    layers?: LayerVersion[],
+    layers: LayerVersion[] = [],
   ) {
     super(scope, id);
 
-    this.handler = new Function(this, `${name}-handler`, {
+    this.handler = new NodejsFunction(this, `${name}-handler`, {
       runtime: Runtime.NODEJS_16_X,
-      code: Code.fromAsset(this.lambdaCodeDirectory),
-      handler,
+      entry: `${this.lambdaCodeDirectory}/${file}.js`,
       environment: {
-        TABLE_NAME: `${process.env.NODE_ENV}-Table`,
+        TABLE_NAME: 'dev-Table',
         TWITCH_EVENT_SUB_LISTENER_SECRET:
           process.env.TWITCH_EVENT_SUB_LISTENER_SECRET,
       },
       layers,
     });
+  }
+
+  addPolicy(policy: PolicyStatement) {
+    this.handler.addToRolePolicy(policy);
   }
 }

@@ -2,8 +2,8 @@ import { Construct } from 'constructs';
 import { LayerVersion } from 'aws-cdk-lib/aws-lambda';
 import { BaseLambda } from './base-lambda';
 
-export class FirstLambda extends BaseLambda {
+export class LeaderboardLambda extends BaseLambda {
   constructor(scope: Construct, id: string, layers?: LayerVersion[]) {
-    super('First', 'first', scope, id, layers);
+    super('Leaderboard', 'leaderboard', scope, id, layers);
   }
 }
