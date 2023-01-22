@@ -48,11 +48,16 @@ jobs:
     - name: Install aws cdk
       run: npm install -g aws-cdk
 
-    - name: Build App and pre-deploy
+    - name: Build App
       id: build
       run: |
         yarn install --frozen-lockfile
         yarn build
+
+    - name: Bootstrap CDK
+      id: bootstrap
+      run: |
+        cdk bootstrap
 
     - name: Deploy to aws
       id: deploy
