@@ -6,6 +6,7 @@ on:
       - 'src/functions/**'
       - 'src/middlewares/**'
       - 'src/repository/**'
+      - 'src/infra/**'
     branches:
       - main
   workflow_dispatch:
@@ -18,6 +19,10 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
     - name: Set env to prod
       if: endsWith(github.ref, '/main')
@@ -29,20 +34,19 @@ jobs:
 
     - uses: actions/checkout@v2
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1-node16
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ca-central-1
+        role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+        aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Setup Node version
       uses: actions/setup-node@v1
       with:
         node-version: 16.x
 
-    - name: Install Serverless Framework
-      run: npm install -g serverless
+    - name: Install aws cdk
+      run: npm install -g aws-cdk
 
     - name: Build App and pre-deploy
       id: build
@@ -50,13 +54,7 @@ jobs:
         yarn install --frozen-lockfile
         yarn build
 
-    - name: Create node module layer
-      id: layer
-      run: |
-        chmod +x "${GITHUB_WORKSPACE}/prepare-module-layer.sh"
-        "${GITHUB_WORKSPACE}/prepare-module-layer.sh"
-
     - name: Deploy to aws
       id: deploy
       run: |
-        NODE_ENV=$NODE_ENV TWITCH_EVENT_SUB_LISTENER_SECRET=$TWITCH_EVENT_SUB_LISTENER_SECRET sls deploy
+        NODE_ENV=$NODE_ENV TWITCH_EVENT_SUB_LISTENER_SECRET=$TWITCH_EVENT_SUB_LISTENER_SECRET cdk deploy --require-approval never
