@@ -54,6 +54,6 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" 
 
-      - name: Copy files to the production website with the AWS CLI
+      - name: Deploy app runner
         run: |
           aws apprunner start-deployment --service-arn ${{ secrets.APP_RUNNER_ARN }}
