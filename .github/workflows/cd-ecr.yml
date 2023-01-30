@@ -56,4 +56,4 @@ jobs:
 
       - name: Deploy app runner
         run: |
-          aws apprunner start-deploymen --region us-east-1 --service-arn ${{ secrets.APP_RUNNER_ARN }}
+          aws apprunner start-deployment --region us-east-1 --service-arn ${{ secrets.APP_RUNNER_ARN }}
