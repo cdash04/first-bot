@@ -14,6 +14,6 @@ export class DynamoDbStack extends Construct {
   }
 
   grantReadWriteAccess(grantees: IGrantable[]) {
-    grantees.forEach(this.table?.grantReadWriteData);
+    grantees.forEach((grantee) => this.table?.grantReadWriteData(grantee));
   }
 }
