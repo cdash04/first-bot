@@ -57,7 +57,7 @@ jobs:
     - name: Bootstrap CDK
       id: bootstrap
       run: |
-        cdk bootstrap
+        cdk synth
 
     - name: Deploy to aws
       id: deploy
