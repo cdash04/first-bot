@@ -1,5 +1,5 @@
 import { Table, ITable } from 'aws-cdk-lib/aws-dynamodb';
-import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { Effect, IGrantable, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 export class DynamoDbStack extends Construct {
@@ -11,17 +11,9 @@ export class DynamoDbStack extends Construct {
     super(scope, id);
 
     this.table = Table.fromTableName(this, 'first-bot-table', 'dev-Table');
+  }
 
-    this.accessTablePolicy = new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'dynamodb:GetItem',
-        'dynamodb:Query',
-        'dynamodb:PutItem',
-        'dynamodb:UpdateItem',
-        'dynamodb:DeleteItem',
-      ],
-      resources: [this.table.tableArn],
-    });
+  grantReadWriteAccess(grantees: IGrantable[]) {
+    grantees.forEach(this.table?.grantReadWriteData);
   }
 }

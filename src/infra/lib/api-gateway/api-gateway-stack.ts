@@ -6,7 +6,6 @@ import {
 } from 'aws-cdk-lib/aws-apigateway';
 import { IFunction } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
-import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import {
   FirstLambda,
   OnlineEventLambda,
@@ -18,6 +17,8 @@ import {
 import { BaseLambda } from '../lambda/base-lambda';
 
 export class ApiGatewayStack extends Construct {
+  private readonly api: RestApi;
+
   readonly handlers: Record<string, BaseLambda> = {};
 
   readonly integrations: Record<string, LambdaIntegration> = {};
@@ -26,7 +27,7 @@ export class ApiGatewayStack extends Construct {
 
   constructor(scope: Construct, id: string) {
     super(scope, id);
-    const api = new RestApi(this, 'api-gateway-stack', {
+    this.api = new RestApi(this, 'api-gateway-stack', {
       restApiName: 'First Bot',
       description: 'First Bot Rest Api',
       defaultCorsPreflightOptions: {
@@ -86,10 +87,10 @@ export class ApiGatewayStack extends Construct {
     );
 
     // routes
-    this.routes.firstRoute = api.root.addResource('firsts');
-    this.routes.broadcastersRoute = api.root.addResource('broadcasters');
-    this.routes.leaderboardRoute = api.root.addResource('leaderboards');
-    this.routes.payToWinRoute = api.root.addResource('pay-to-win');
+    this.routes.firstRoute = this.api.root.addResource('firsts');
+    this.routes.broadcastersRoute = this.api.root.addResource('broadcasters');
+    this.routes.leaderboardRoute = this.api.root.addResource('leaderboards');
+    this.routes.payToWinRoute = this.api.root.addResource('pay-to-win');
 
     // base route access
     this.routes.firstRoute.addMethod('ANY', this.integrations.firstIntegration);
@@ -107,7 +108,7 @@ export class ApiGatewayStack extends Construct {
     );
 
     // webhooks
-    this.routes.webhookRoute = api.root.addResource('events');
+    this.routes.webhookRoute = this.api.root.addResource('events');
     this.routes.onlineEventRoute =
       this.routes.webhookRoute.addResource('online');
     this.routes.offlineEventRoute =
@@ -138,13 +139,8 @@ export class ApiGatewayStack extends Construct {
     });
   }
 
-  addDynamoDbAccessPolicy(accessPolicy: PolicyStatement) {
-    this.handlers.firstLambda.addPolicy(accessPolicy);
-    this.handlers.broadcastersLambda.addPolicy(accessPolicy);
-    this.handlers.leaderboardLambda.addPolicy(accessPolicy);
-    this.handlers.payToWinLambda.addPolicy(accessPolicy);
-    this.handlers.offlineEventLambda.addPolicy(accessPolicy);
-    this.handlers.onlineEventLambda.addPolicy(accessPolicy);
+  getHandlers(): IFunction[] {
+    return Object.values(this.handlers).map((value) => value.handler);
   }
 
   private getLambdaIntegration = (handler: IFunction) =>

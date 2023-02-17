@@ -10,6 +10,7 @@ export class InfraStack extends Stack {
     const dynamoDb = new DynamoDbStack(this, 'first-bot-dynamo-db');
 
     const apiGateway = new ApiGatewayStack(this, 'first-bot-api-gateway');
-    apiGateway.addDynamoDbAccessPolicy(dynamoDb.accessTablePolicy);
+
+    dynamoDb.grantReadWriteAccess(apiGateway.getHandlers());
   }
 }

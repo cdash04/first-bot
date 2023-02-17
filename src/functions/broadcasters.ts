@@ -33,6 +33,14 @@ api.post('/broadcasters', async (req: Request, res: Response) => {
   return res.status(200).json({ broadcaster });
 });
 
+api.get('/broadcasters', async (req: Request, res: Response) => {
+  const broadcasters = await broadcasterRepository.scan(
+    {},
+    { fields: ['name', 'id'] },
+  );
+  res.status(201).json({ broadcasters });
+});
+
 api.get(
   '/broadcasters/:broadcasterId/current-streak',
   async (req: Request, res: Response) => {
