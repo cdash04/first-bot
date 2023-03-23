@@ -7,12 +7,14 @@ import {
 } from '../repository/dynamo-repository';
 
 import { corsMiddleware } from '../middlewares/cors';
+import { FirstRequest } from '../models/first-request';
+import { BroadcasterService } from '../services/broadcaster-service';
 
 const api = createAPI({ logger: true });
 
 api.use(corsMiddleware);
 
-api.post('/firsts', async (req: Request, res: Response) => {
+api.post('/firsts', async (req: FirstRequest, res: Response) => {
   console.log({ body: req.body });
   const { broadcasterId, broadcasterName, viewerId, viewerName } = req.body;
 
@@ -25,11 +27,14 @@ api.post('/firsts', async (req: Request, res: Response) => {
 
   // get broadcaster
   let broadcaster = await broadcasterRepository.get({ id: broadcasterId });
-
-  console.log({ broadcaster });
+  const broadcasterService = new BroadcasterService(
+    broadcasterId,
+    broadcasterName,
+    broadcasterRepository,
+  );
 
   // if streamer is offline
-  if (!broadcaster.online) {
+  if (!broadcasterService.broadcasterIsOnline()) {
     return res.status(201).json({
       message: `@${broadcaster.name} is offline, you cannot first someone who's offline`,
     });
@@ -42,45 +47,26 @@ api.post('/firsts', async (req: Request, res: Response) => {
   });
 
   // when broadcaster is new, viewer is first and must be new
-  if (!broadcaster) {
-    [broadcaster, viewer] = await Promise.all([
-      // create new broadcaster
-      await broadcasterRepository.create({
-        id: broadcasterId,
-        name: broadcasterName,
-        currentFirstViewer: viewerId,
-        currentFirstStreak: 1,
-        firstIsRedeemed: true,
-      }),
-      // create new viewer
-      await viewerRepository.create({
-        id: viewerId,
-        name: viewerName,
-        broadcasterId,
-        broadcasterName,
-        firstCount: 1,
-      }),
-    ]);
+  if (broadcasterService.broadcasterIsNew) {
+    // create new viewer
+    viewer = await viewerRepository.create({
+      id: viewerId,
+      name: viewerName,
+      broadcasterId,
+      broadcasterName,
+      firstCount: 1,
+    });
     return res.status(200).json({
       message: `Congrats @${viewerName}, you are the first ever to this channel. Starting a whole new adventure.`,
     });
   }
 
   // when viewer is new but broadcaster is not new and first is not redeemed
-  if (!viewer && !broadcaster.firstIsRedeemed) {
+  if (!viewer && !(await broadcasterService.firstIsRedeemed())) {
     [broadcaster, viewer] = await Promise.all([
       // update current streak viewer and current streak count
-      await broadcasterRepository.update(
-        { id: broadcaster.id },
-        {
-          set: {
-            broadcasterName,
-            currentFirstViewer: viewerId,
-            currentFirstStreak: 1,
-            firstIsRedeemed: true,
-          },
-        },
-      ),
+      // new streak since viewer is new.
+      broadcasterService.setNewStreak(viewerId),
       // create new viewer
       await viewerRepository.create({
         id: viewerId,
@@ -97,7 +83,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
   }
 
   // when viewer is new but the first is already redeemed
-  if (!viewer && broadcaster.firstIsRedeemed) {
+  if (!viewer && (await broadcasterService.firstIsRedeemed())) {
     const viewer = await viewerRepository.create({
       id: viewerId,
       name: viewerName,
@@ -118,8 +104,12 @@ api.post('/firsts', async (req: Request, res: Response) => {
 
   // when firstIsRedeemed and first is redemeed by the same person
   if (
-    broadcaster.firstIsRedeemed &&
-    broadcaster.currentFirstViewer === viewer.id
+    (
+      await Promise.all([
+        broadcasterService.firstIsRedeemed(),
+        broadcasterService.viewerIsAlreadyFirst(viewer.id),
+      ])
+    ).every(Boolean)
   ) {
     return res.status(200).json({
       message: `Geez @${viewerName}, you already got the first for this stream session, calm down you greedy`,
@@ -128,8 +118,12 @@ api.post('/firsts', async (req: Request, res: Response) => {
 
   // when firstIsRedeemed and first is redemeed by another person
   if (
-    broadcaster.firstIsRedeemed &&
-    broadcaster.currentFirstViewer !== viewer.id
+    (
+      await Promise.all([
+        broadcasterService.firstIsRedeemed(),
+        broadcasterService.viewerIsNotAlreadyFirst(viewer.id),
+      ])
+    ).every(Boolean)
   ) {
     const currentViewer = await viewerRepository.get({
       broadcasterId: broadcaster.id,
@@ -141,20 +135,10 @@ api.post('/firsts', async (req: Request, res: Response) => {
   }
 
   // when !first has been redeemed by a new person
-  if (broadcaster.currentFirstViewer !== viewer.id) {
+  if (await broadcasterService.viewerIsNotAlreadyFirst(viewer.id)) {
     [broadcaster, viewer] = await Promise.all([
       // init streak
-      broadcasterRepository.update(
-        { id: broadcaster.id },
-        {
-          set: {
-            broadcasterName,
-            currentFirstViewer: viewer.id,
-            currentFirstStreak: 1,
-            firstIsRedeemed: true,
-          },
-        },
-      ),
+      broadcasterService.setNewStreak(viewer.id),
       // add 1 to viewer count
       viewerRepository.update(
         {
@@ -171,16 +155,10 @@ api.post('/firsts', async (req: Request, res: Response) => {
   }
 
   // when !first has been redeemed by the same person
-  if (broadcaster.currentFirstViewer === viewer.id) {
+  if (await broadcasterService.viewerIsAlreadyFirst(viewer.id)) {
     [broadcaster, viewer] = await Promise.all([
       // add 1 to the streak, since it continue and set firstIsRedeemed to true
-      broadcasterRepository.update(
-        { id: broadcaster.id },
-        {
-          add: { currentFirstStreak: 1 },
-          set: { broadcasterName, firstIsRedeemed: true },
-        },
-      ),
+      broadcasterService.updateCurrentStreak(),
       // add 1 to viewer count
       viewerRepository.update(
         {

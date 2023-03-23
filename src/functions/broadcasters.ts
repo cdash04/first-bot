@@ -27,6 +27,7 @@ api.post('/broadcasters', async (req: Request, res: Response) => {
       online: false,
       firstIsRedeemed: false,
       currentFirstStreak: 0,
+      bits: 0,
     });
   }
 

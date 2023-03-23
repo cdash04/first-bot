@@ -1,5 +1,5 @@
 import { Table, ITable } from 'aws-cdk-lib/aws-dynamodb';
-import { Effect, IGrantable, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { IGrantable, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 export class DynamoDbStack extends Construct {
