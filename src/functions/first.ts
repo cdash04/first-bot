@@ -262,7 +262,7 @@ api.post('/firsts/steal', async (req: Request, res: Response) => {
   }
 
   // when cheered bits are less than previous first
-  if (+bits <= (broadcaster.bits ?? 0)) {
+  if (Number(bits) <= (broadcaster.bits ?? 0)) {
     const currentFirstViewer = await viewerRepository.get({
       id: broadcaster.currentFirstViewer,
     });
