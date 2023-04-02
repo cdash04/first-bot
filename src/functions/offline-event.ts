@@ -12,9 +12,7 @@ api.use(challengeWebhookMiddleware);
 api.use(eventSubSecret);
 
 api.post('/events/offline', async (req: Request, res: Response) => {
-  const broadcasterId: string = (
-    req.body?.event?.broadcaster_user_id as string
-  )?.toLowerCase();
+  const broadcasterId: string = req.body?.event?.broadcaster_user_id as string;
   const broadcasterName: string = (
     req.body?.event?.broadcaster_user_name as string
   )?.toLowerCase();

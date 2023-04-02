@@ -74,7 +74,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
         { id: broadcaster.id },
         {
           set: {
-            broadcasterName,
+            name: broadcasterName,
             currentFirstViewer: viewerId,
             currentFirstStreak: 1,
             firstIsRedeemed: true,
@@ -148,7 +148,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
         { id: broadcaster.id },
         {
           set: {
-            broadcasterName,
+            name: broadcasterName,
             currentFirstViewer: viewer.id,
             currentFirstStreak: 1,
             firstIsRedeemed: true,
@@ -178,7 +178,7 @@ api.post('/firsts', async (req: Request, res: Response) => {
         { id: broadcaster.id },
         {
           add: { currentFirstStreak: 1 },
-          set: { broadcasterName, firstIsRedeemed: true },
+          set: { name: broadcasterName, firstIsRedeemed: true },
         },
       ),
       // add 1 to viewer count
