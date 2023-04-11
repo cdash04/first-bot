@@ -261,6 +261,12 @@ api.post('/firsts/steal', async (req: Request, res: Response) => {
     });
   }
 
+  if (broadcaster.currentFirstViewer === viewerId) {
+    return res.status(200).json({
+      message: `@${viewerName}, you cannot steal the first from yourself, bits are not refundable though.`,
+    });
+  }
+
   // when cheered bits are less than previous first
   if (Number(bits) <= (broadcaster.bits ?? 0)) {
     const currentFirstViewer = await viewerRepository.get({
