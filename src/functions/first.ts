@@ -265,6 +265,7 @@ api.post('/firsts/steal', async (req: Request, res: Response) => {
   if (Number(bits) <= (broadcaster.bits ?? 0)) {
     const currentFirstViewer = await viewerRepository.get({
       id: broadcaster.currentFirstViewer,
+      broadcasterId: broadcaster.id,
     });
     return res.status(201).json({
       message: `@${viewerName} you cannot steal the first since @${currentFirstViewer.name} is less cheapos than you.`,
@@ -309,6 +310,7 @@ api.post('/firsts/steal', async (req: Request, res: Response) => {
     },
     {
       add: { firstCount: 1 },
+      set: { name: viewerName },
     },
   );
 
