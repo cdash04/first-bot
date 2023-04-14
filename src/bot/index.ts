@@ -50,9 +50,6 @@ const TMI_OPTIONS: Options = {
 const chatClient = new TMI.Client(TMI_OPTIONS);
 
 chatClient
-  .on('message', (channel, tags, message, self) => {
-    console.log({ channel, tags, message, self });
-  })
   .on('connecting', initChatBot)
   .on('message', messageHandler(chatClient))
   .on('cheer', cheerHandler(chatClient));
