@@ -47,7 +47,7 @@ export class BroadcasterService {
   }
 
   async viewerIsNotAlreadyFirst(viewerId: string): Promise<boolean> {
-    return (await this.broadcaster).currentFirstViewer !== viewerId;
+    return !(await this.viewerIsAlreadyFirst(viewerId));
   }
 
   async setNewStreak(viewerId: string): Promise<Broadcaster> {
