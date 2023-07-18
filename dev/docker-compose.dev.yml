@@ -1,0 +1,25 @@
+# main app
+services:
+  bot:
+    env_file:
+      - .env.dev
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    command: yarn node dist/bot -c firstbotdev
+  # api gateway and lambda service
+  localstack:
+    env_file:
+      - .env.dev
+    image: localstack/localstack:0.12.9
+    ports:
+      - "4566-4620:4566-4620"
+    volumes:
+     - "$PWD/init.sh:/etc/localstack/init/ready.d/init.sh"
+     - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+     - "/var/run/docker.sock:/var/run/docker.sock"
+    tmpfs:
+      - /tmp/localstack:exec,mode=600
+

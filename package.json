@@ -19,7 +19,8 @@
         "run-prettier": "prettier src/**/*.ts",
         "validate-prettiness": "yarn run-prettier -c",
         "make-prettier": "yarn run-prettier --write",
-        "start:local-db": "NODE_ENV=dev sls dynamodb install"
+        "start:local-db": "NODE_ENV=dev sls dynamodb install",
+        "local": "cdklocal"
     },
     "author": "Christophe Duchesne-Ashworth",
     "license": "ISC",
