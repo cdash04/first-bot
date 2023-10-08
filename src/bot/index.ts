@@ -1,5 +1,4 @@
 import TMI, { Options } from 'tmi.js';
-import { program } from 'commander';
 
 import { twitchClient } from './twitch-client';
 import { messageHandler } from './handlers/message-handler';
@@ -9,16 +8,6 @@ import {
   createOfflineSubscriptionService,
   createOnlineSubscriptionService,
 } from './services';
-import { healthCheckServer } from './healthcheck';
-
-program.option(
-  '-c, --channels <string>',
-  'channels chat the bot will listen to',
-);
-program.parse();
-
-const { channels: channelsArgument } = program.opts<{ channels: string }>();
-const channels = channelsArgument.split(',').map((channel) => channel.trim());
 
 const botName = process.env.BOT_NAME;
 const tmiOauth = process.env.TWITCH_TMI_OAUTH;
@@ -27,35 +16,47 @@ const onlineSubscriptionService = createOnlineSubscriptionService(twitchClient);
 const offlineSubscriptionService =
   createOfflineSubscriptionService(twitchClient);
 
-const initChatBot = () =>
-  Promise.all(
-    channels.map(async (channel) => {
-      const username = channel.replace('#', '');
-      await broadcasterService.initBroadcaster(username);
-      await onlineSubscriptionService.subscribeToOnlineEvent(username);
-      await offlineSubscriptionService.subscribeToOfflineEvent(username);
-    }),
-  );
+// Get broadcasters and setup
+const channelIds = broadcasterService
+  .getBroadcasters()
+  .then(({ broadcasters }) => {
+    Promise.all(
+      broadcasters
+        .map(({ id }) => [
+          onlineSubscriptionService.subscribeToOnlineEvent(id),
+          offlineSubscriptionService.subscribeToOfflineEvent(id),
+        ])
+        .flat(),
+    );
+    return broadcasters.map(({ id }) => id);
+  });
 
-// TMI listener setup
-const TMI_OPTIONS: Options = {
-  options: {},
-  identity: {
-    username: botName,
-    password: tmiOauth,
-  },
-  channels,
-};
+// Get broadcasters channel names
+const channelUsers = channelIds.then((channelIds) =>
+  twitchClient.users.getUsersByIds(channelIds),
+);
 
-const chatClient = new TMI.Client(TMI_OPTIONS);
+// Setup and start bot lis
+channelUsers.then((channelUsers) => {
+  // TMI listener setup
+  const channels = channelUsers.map(({ name }) => name);
+  const TMI_OPTIONS: Options = {
+    options: {},
+    identity: {
+      username: botName,
+      password: tmiOauth,
+    },
+    channels,
+  };
 
-chatClient
-  .on('connecting', initChatBot)
-  .on('message', messageHandler(chatClient))
-  .on('cheer', cheerHandler(chatClient));
+  const chatClient = new TMI.Client(TMI_OPTIONS);
 
-chatClient.connect();
+  chatClient
+    .on('connecting', () => {
+      console.log('bot connected');
+    })
+    .on('message', messageHandler(chatClient))
+    .on('cheer', cheerHandler(chatClient));
 
-healthCheckServer.listen(8000, () => {
-  console.log('Server running on port 8000');
+  chatClient.connect();
 });

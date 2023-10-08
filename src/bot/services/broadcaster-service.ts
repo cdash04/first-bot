@@ -1,11 +1,11 @@
 import { apiClient } from '../api-client';
-import { twitchClient } from '../twitch-client';
 
-const initBroadcaster = async (broadcasterName: string) => {
-  const broadcasterId = (
-    await twitchClient.users.getUserByName(broadcasterName)
-  ).id;
-  apiClient.post('/broadcasters', { broadcasterId, broadcasterName });
+export interface BroadcasterResponse {
+  broadcasters: Array<{ id: string; name: string }>;
+}
+
+const getBroadcasters = async (): Promise<BroadcasterResponse> => {
+  return (await apiClient.get<BroadcasterResponse>('/broadcasters')).data;
 };
 
-export default { initBroadcaster };
+export default { getBroadcasters };

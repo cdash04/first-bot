@@ -2,9 +2,6 @@
 import { ApiClient } from '@twurple/api';
 
 export const createOfflineSubscriptionService = (twitchApi: ApiClient) => {
-  const getChannelId = async (channelName: string) =>
-    (await twitchApi.users.getUserByName(channelName)).id;
-
   const getOfflineEvents = async () =>
     twitchApi.eventSub.getSubscriptionsForType('stream.offline');
 
@@ -14,9 +11,7 @@ export const createOfflineSubscriptionService = (twitchApi: ApiClient) => {
         offlineEvent.condition?.broadcaster_user_id === channelId,
     );
 
-  const subscribeToOfflineEvent = async (channelName: string) => {
-    const channelId = await getChannelId(channelName);
-
+  const subscribeToOfflineEvent = async (channelId: string) => {
     if (await channelHasOfflineEventSubsciption(channelId)) {
       return;
     }

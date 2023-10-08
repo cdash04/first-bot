@@ -2,9 +2,6 @@
 import { ApiClient } from '@twurple/api';
 
 export const createOnlineSubscriptionService = (twitchApi: ApiClient) => {
-  const getChannelId = async (channelName: string) =>
-    (await twitchApi.users.getUserByName(channelName)).id;
-
   const getOnlineEvents = async () =>
     twitchApi.eventSub.getSubscriptionsForType('stream.online');
 
@@ -15,8 +12,7 @@ export const createOnlineSubscriptionService = (twitchApi: ApiClient) => {
     );
   };
 
-  const subscribeToOnlineEvent = async (channelName: string) => {
-    const channelId = await getChannelId(channelName);
+  const subscribeToOnlineEvent = async (channelId: string) => {
 
     if (await channelHasOnlineEventSubsciption(channelId)) {
       return;
