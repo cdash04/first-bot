@@ -13,7 +13,6 @@ export const createOnlineSubscriptionService = (twitchApi: ApiClient) => {
   };
 
   const subscribeToOnlineEvent = async (channelId: string) => {
-
     if (await channelHasOnlineEventSubsciption(channelId)) {
       return;
     }

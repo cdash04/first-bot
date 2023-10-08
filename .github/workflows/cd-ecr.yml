@@ -28,6 +28,9 @@ jobs:
       contents: read
 
     steps:
+      - name: install qemu-user-static
+        run : sudo apt-get install qemu-user-static
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
