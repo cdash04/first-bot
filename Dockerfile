@@ -1,6 +1,6 @@
 # Dockerfile for bot
 
-FROM node:16-alpine
+FROM node:20-alpine
 
 # Install app dependencies
 COPY package.json yarn.lock ./
